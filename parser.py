@@ -7,7 +7,9 @@ def readQuery():
     actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
     first_name VARCHAR(45) NOT NULL,
     last_name character varying(45) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
+    last_update timestamp without time zone DEFAULT now() NOT NULL,
+    FOREIGN KEY (timestamp) REFERENCES Weeks (time) ON DELETE CASCADE,
+    Primary Key (actor_id)
     );'''
     sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
     qs = [sql1,sql2]
@@ -64,10 +66,22 @@ def createParse(keyword, tokens): #Design Choice, stop user from using () in nam
                 c_type = c[1]  # For condensed type information 
                 # OR 
                 #c_type = " ".join(c[1:]) # For detailed type information 
+                if c[0].casefold() == "Primary".casefold():
+                    print(f"Primary key: {c[2][1:-1]}")
+                    continue
+                if c[0].casefold() == "Foreign".casefold():
+                    print(f"Foreign key: {c[2][1:-1]}")
+                    print(f"    Referenced Table: {c[4][0:-1]}")
+                    print(f"    Referenced Row: {c[5][1:-1]}")
+                    delete = " ".join(c[8:])
+                    print(f"    Delete Type: {delete}")
+                    continue
                 print (f"column: {c_name}")
                 print (f"date type: {c_type}")
+                #print(type(c[0]))
             print ("---"*20)
             break
+        
         if keyword == "index" and token.match(sqlparse.tokens.Keyword, 'INDEX'):
              print (f"index: {tokens[i+1]}")
              continue
