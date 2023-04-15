@@ -14,7 +14,7 @@ sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
 sql3 = "DROP TABLE table_1"
 sql4 = "DROP INDEX index_1 ON table_1"
 sql5 = "SELECT * FROM table_1"
-qs = [sql1,sql2,sql3]
+qs = [sql1,sql2,sql3, sql4]
 #qs = [sql3]
 def readQuery(qs):
     #query = input("Please enter query")
@@ -103,11 +103,14 @@ def dropParse(flag, tokens):
     if flag == 1:
         #print("Drop Table")
         print (f"table: {tokens[-1]}")
+        print ("---"*20)
         return
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.Keyword, 'ON'):
             print (f"index: {tokens[i-1]}")
             print (f"table: {tokens[i+1]}")
+            print ("---"*20)
+            return 
 
 def updateParse():
     pass
