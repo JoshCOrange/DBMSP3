@@ -1,21 +1,21 @@
-import sqlvalidator
 import sqlparse
 import string
 
-sql1 = '''CREATE TABLE public.actor (
+sqlCT = '''CREATE TABLE public.actor (
     actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
     first_name VARCHAR(45) NOT NULL,
     last_name character varying(45) NOT NULL,
     last_update timestamp without time zone DEFAULT now() NOT NULL,
-    FOREIGN KEY (timestamp) REFERENCES Weeks (time) ON DELETE CASCADE,
+    FOREIGN KEY (last_update) REFERENCES Weeks (time) ON DELETE CASCADE,
+    FOREIGN KEY (first_name) REFERENCES Names (first_name) ON DELETE CASCADE,
     Primary Key (actor_id)
     );'''
-sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
-sql3 = "DROP TABLE table_1"
-sql4 = "DROP INDEX index_1 ON table_1"
-sql5 = "SELECT * FROM table_1"
-qs = [sql1,sql2,sql3, sql4]
-#qs = [sql3]
+sqlCI = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
+sqlDT = "DROP TABLE table_1"
+sqlDI = "DROP INDEX index_1 ON table_1"
+sqlS = "SELECT * FROM table_1"
+qs = [sqlCT,sqlCI,sqlDT, sqlDI]
+#qs = [sqlS]
 def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
@@ -28,26 +28,20 @@ def readQuery(qs):
             #print(type(tokens))
             #temp = str(tokens[0])
             if tokens[0].match(sqlparse.tokens.DDL, 'CREATE'):
-                #print(sqlparse.tokens)
                 if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
-                    #print("Table")
-                    #for token in tokens: print(token)
                     createParse(1,tokens)
                 if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
-                    #print("Index")
-                    #for token in tokens: print(token)
                     createParse(-1, tokens)
             if tokens[0].match(sqlparse.tokens.DDL, 'DROP'): #Should we handle if exists?
-                #print("Drop")
-                #if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
                 if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
-                    #print("Table")
-                    #for token in tokens: print(token)
                     dropParse(1,tokens)
                 if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
-                    #print("Index")
-                    #for token in tokens: print(token)
                     dropParse(-1, tokens)
+            if tokens[0].match(sqlparse.tokens.DML, 'SELECT'):
+                if sql_query.is_valid():
+                    selectParse(tokens)
+                else:
+                    print("Mistake in SELECT statement")
 
 
 
@@ -118,7 +112,7 @@ def insertParse():
     pass
 def deleteParse():
     pass
-def selectParse(qs):
-    pass
-
+def selectParse(tokens):
+    print(tokens)
+    return
 readQuery(qs)
