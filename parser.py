@@ -1,9 +1,8 @@
 import sqlvalidator
 import sqlparse
 import string
-def readQuery():
-    #query = input("Please enter query")
-    sql1 = '''CREATE TABLE public.actor (
+
+sql1 = '''CREATE TABLE public.actor (
     actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
     first_name VARCHAR(45) NOT NULL,
     last_name character varying(45) NOT NULL,
@@ -11,8 +10,14 @@ def readQuery():
     FOREIGN KEY (timestamp) REFERENCES Weeks (time) ON DELETE CASCADE,
     Primary Key (actor_id)
     );'''
-    sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
-    qs = [sql1,sql2]
+sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
+sql3 = "SELECT * FROM table_1"
+qs = [sql1,sql2]
+#qs = [sql3]
+readQuery(qs)
+
+def readQuery(qs):
+    #query = input("Please enter query")
     #sql = "DROP TABLE test"
     for sql in qs:
         parsed = sqlparse.parse(sql)
@@ -112,7 +117,5 @@ def insertParse():
     pass
 def deleteParse():
     pass
-def selectParse():
+def selectParse(qs):
     pass
-
-readQuery()
