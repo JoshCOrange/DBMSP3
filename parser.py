@@ -11,15 +11,16 @@ sql1 = '''CREATE TABLE public.actor (
     Primary Key (actor_id)
     );'''
 sql2 = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
-sql3 = "SELECT * FROM table_1"
-qs = [sql1,sql2]
+sql3 = "DROP TABLE table_1"
+sql4 = "DROP INDEX index_1 ON table_1"
+sql5 = "SELECT * FROM table_1"
+qs = [sql1,sql2,sql3]
 #qs = [sql3]
-readQuery(qs)
-
 def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
     for sql in qs:
+        tiflag = 0 # 1 for table, -1 for index, 0 for other
         parsed = sqlparse.parse(sql)
         for stmt in parsed:
             tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
@@ -31,12 +32,23 @@ def readQuery(qs):
                 if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
                     #print("Table")
                     #for token in tokens: print(token)
-                    print(createParse("table",tokens))
+                    createParse(1,tokens)
                 if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
                     #print("Index")
                     #for token in tokens: print(token)
-                    print(createParse("index", tokens))
-    dropParse(parsed)
+                    createParse(-1, tokens)
+            if tokens[0].match(sqlparse.tokens.DDL, 'DROP'): #Should we handle if exists?
+                #print("Drop")
+                #if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
+                if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
+                    #print("Table")
+                    #for token in tokens: print(token)
+                    dropParse(1,tokens)
+                if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
+                    #print("Index")
+                    #for token in tokens: print(token)
+                    dropParse(-1, tokens)
+
 
 
 def get_table_name(tokens): #Used for create table and create index
@@ -45,19 +57,9 @@ def get_table_name(tokens): #Used for create table and create index
             return token.value
     return " "
 
-def createParse(keyword, tokens): #Design Choice, stop user from using () in naming anything
-    #for stmt in parse:
-    # Get all the tokens except whitespaces
-        #tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
-        #is_create_stmt = False
+def createParse(flag, tokens): #Design Choice, stop user from using () in naming anything
     for i, token in enumerate(tokens):
-        # Is it a create statements ?
-        #if token.match(sqlparse.tokens.DDL, 'CREATE'):
-        #    is_create_stmt = True
-        #    continue
-        # If it was a create statement and the current token starts with "("
-        #if is_create_stmt and token.value.startswith("("):
-        if keyword == "table" and token.value.startswith("("):
+        if flag == 1 and token.value.startswith("("):
             # Get the table name by looking at the tokens in reverse order till you find
             # a token with None type
             print (f"table: {get_table_name(tokens[:i])}")
@@ -86,31 +88,27 @@ def createParse(keyword, tokens): #Design Choice, stop user from using () in nam
                 #print(type(c[0]))
             print ("---"*20)
             break
-        
-        if keyword == "index" and token.match(sqlparse.tokens.Keyword, 'INDEX'):
-             print (f"index: {tokens[i+1]}")
-             continue
-        if keyword == "index" and token.match(sqlparse.tokens.Keyword, 'ON'):
+
+        if flag == -1 and token.match(sqlparse.tokens.Keyword, 'ON'):
+            print (f"index: {tokens[i-1]}")
             tableColumns =tokens[i+1].value.split(" ")
             tableColumns = [''.join(c for c in s if c not in string.punctuation) for s in tableColumns]
             tableColumns = [s for s in tableColumns if s]
             print (f"table: {tableColumns[0]}")
             for col in tableColumns[1:]:
                 print (f"column: {col}")
+            print ("---"*20)
             
-def dropParse(parse):
-    for stmt in parse:
-    # Get all the tokens except whitespaces
-        tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
-        is_drop_stmt = False
-        for i, token in enumerate(tokens):
-            # Is it a create statements ?
-            if token.match(sqlparse.tokens.DDL, 'DROP'):
-                is_drop_stmt = True
-                continue
-            if is_drop_stmt and token.value == "TABLE":
-                #print (f"table: {get_table_name(tokens[:i])}")
-                print(tokens[i+1])
+def dropParse(flag, tokens):
+    if flag == 1:
+        #print("Drop Table")
+        print (f"table: {tokens[-1]}")
+        return
+    for i, token in enumerate(tokens):
+        if token.match(sqlparse.tokens.Keyword, 'ON'):
+            print (f"index: {tokens[i-1]}")
+            print (f"table: {tokens[i+1]}")
+
 def updateParse():
     pass
 def insertParse():
@@ -119,3 +117,5 @@ def deleteParse():
     pass
 def selectParse(qs):
     pass
+
+readQuery(qs)
