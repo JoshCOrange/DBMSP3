@@ -188,8 +188,37 @@ def updateParse(flag, tokens): #assumes values are encolsed in single quotes
         schemaDict = {'table': tableName, 'columns': columns, 'values': values}
         return schemaDict #or whatever to send to execution
 
-def insertParse():
-    pass
+def insertParse(flag, tokens): #INSERT INTO table_name (column1, column2, column3) VALUES (value1, value2, value3);
+    tableName = None
+    columns = []
+    values = []
+
+    for token in tokens:
+        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'INTO':
+            tableName = str(tokens[tokens.index(token) + 1])
+            break
+
+    for token in tokens:
+        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'VALUES':
+            valuesStartIndex = tokens.index(token) + 1
+            break
+
+        if token.ttype is sqlparse.tokens.Punctuation and token.value == '(':
+            columnsStartIndex = tokens.index(token) + 1
+            while True:
+                columnName = str(tokens[columnsStartIndex])
+                if columnName == ')':
+                    break
+                if columnName != ',':
+                    columns.append(columnName)
+                columnsStartIndex += 1
+
+    for token in tokens[valuesStartIndex:]:
+        if token.ttype is sqlparse.tokens.String:
+            values.append(token.value.strip("'"))
+
+    schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+    return schemaDict
 
 def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
     tableName = None
@@ -230,6 +259,9 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
         if token.value.startswith("WHERE"): #only one where and its also the end
             clause = str(tokens[i])
             #print()
+        if token.match(sqlparse.tokens.Keyword, 'ORDER BY'):
+            columns = tokens[i + 1].value.split(" ")
+    
         #print(token)
 
     #tokens[i].match(sqlparse.tokens.Keyword, 'AND') or tokens[i].match(sqlparse.tokens.Keyword, 'OR')
