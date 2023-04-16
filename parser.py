@@ -1,5 +1,6 @@
 import sqlparse
 import string
+import re
 
 sqlCT = '''CREATE TABLE public.actor (
     actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
@@ -21,8 +22,9 @@ sqlS4 = '''SELECT * FROM PARTS
 sqlS5 = '''SELECT *
             FROM PARTS
             WHERE name LIKE ‘W%’ OR
-            p# IN (2,4,8) OR
-            p# BETWEEN 11 AND 15'''
+            p# BETWEEN 11 AND 15 OR
+            p# IN (2,4,8)
+            '''
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5]
@@ -48,7 +50,7 @@ def readQuery(qs):
                 if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
                     dropParse(-1, tokens)
             if tokens[0].match(sqlparse.tokens.DML, 'SELECT'):
-                selectParse(tokens)
+                selectParse(tokens, stmt)
         print ("---"*20)
 
 
@@ -111,16 +113,45 @@ def dropParse(flag, tokens):
             print (f"table: {tokens[i+1]}")
             return 
 
-def updateParse():
-    pass
+def updateParse(flag, tokens): #assumes values are encolsed in single quotes
+	tableName = tokens[2].value
+	setClause = None
+	for token in tokens:
+		if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'SET':
+			setClause = token
+			break
+	if setClause is None:
+		#ERROR
+
+	columns = []
+	values = []
+
+	for token in setClause.tokens[2:]:
+		if token.ttype is sqlparse.Whitespace:
+			continue
+		elif token.ttype is sqlparse.tokens.Punctuation and token.value == ',':
+			continue
+		elif token.ttype is sqlparse.tokens.Name:
+			columns.append(token.value)
+		elif token.ttype is sqlparse.tokens.String:
+			values.append(token.value.strip("'"))
+		else:
+			#error
+
+		schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+		return schemaDict #or whatever to send to execution
+
 def insertParse():
     pass
 def deleteParse():
     pass
-def selectParse(tokens): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
+
+
+def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     #print(tokens)
     index_f = -1 #index of 'FROM' in sql statement
     index_w = -1
+    clause = ""
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
@@ -130,16 +161,31 @@ def selectParse(tokens): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             tables = tokens[i+1].value.split(" ")
             tables = [''.join(c for c in s if c not in string.punctuation) for s in tables if s]
         if token.value.startswith("WHERE"): #only one where and its also the end
-            clause = tokens[i]
+            clause = str(tokens[i])
+            #print()
         #print(token)
 
     #tokens[i].match(sqlparse.tokens.Keyword, 'AND') or tokens[i].match(sqlparse.tokens.Keyword, 'OR')
-    
-    
-    
     for c in columns:
         print(f"column: {c}")
     for t in tables:
         print(f"table: {t}") 
+    if clause:
+
+        print(clause)
+        #test = sqlparse.sql.Where(tokens)
+        #help(sqlparse.sql.Where)
+        #print(test.Where)
+        betweenParse = re.findall
+        condis = re.split("AND|OR", clause, re.IGNORECASE)
+        conjunc = re.findall("AND|OR", clause, re.IGNORECASE)
+        for i in range(len(condis)):
+            condis[i] = condis[i].strip()
+        print(condis)
+        print(conjunc)
     return
+
+
+
+
 readQuery(qs)
