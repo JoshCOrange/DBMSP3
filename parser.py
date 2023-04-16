@@ -23,11 +23,17 @@ sqlS5 = '''SELECT *
             FROM PARTS
             WHERE name LIKE ‘W%’ OR
             p# BETWEEN 11 AND 15 OR
-            p# IN (2,4,8)
-            '''
+            p# BETWEEN 20 AND 25 OR
+            p# IN (2,4,8)'''
+
+
+sqlS6 = '''SELECT col_1, col_2, col_3, col_4 FROM table_1
+            WHERE col_1 < 10
+            ORDER BY col_2'''
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
-qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5]
+#qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5]
+qs = [sqlS6]
 def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
@@ -65,13 +71,42 @@ def whereParse(clause):
         #test = sqlparse.sql.Where(tokens)
         #help(sqlparse.sql.Where)
         #print(test.Where)
-        betweenParse = re.findall
-        condis = re.split("AND|OR", clause, re.IGNORECASE)
-        conjunc = re.findall("AND|OR", clause, re.IGNORECASE)
-        for i in range(len(condis)):
-            condis[i] = condis[i].strip()
+        conditions = []
+        conjunctions = []
+        betweenParse = re.split("BETWEEN", clause, re.IGNORECASE)
+        for i in range(len(betweenParse)):
+            betweenParse[i] = betweenParse[i].strip()
+        #print(betweenParse)
+        if len(betweenParse) > 1:
+            for i, parsed in enumerate(betweenParse):
+                if i == 0:
+                    condis = re.split("AND|OR", parsed, re.IGNORECASE)
+                    conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
+                    conditions.extend(condis[:-1])
+                    conjunctions.extend(conjunc)
+                    continue
+            
+                
+                if i != (len(betweenParse)):
+                    temp = condis[-1].strip()
+                condis = re.split("AND|OR", parsed, re.IGNORECASE)
+                conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
+                conditions.append(temp + " BETWEEN " + condis[0] + conjunc[0] + condis[1])
+                conditions.extend(condis[2:])
+                conjunctions.extend(conjunc[1:])
+
+        else:
+            conditions = re.split("AND|OR", clause, re.IGNORECASE)
+            conjunctions = re.findall("AND|OR", clause, re.IGNORECASE)
+        for i in range(len(conditions)):
+            conditions[i] = conditions[i].strip()
+        whereSchemaDict = {"conditions": conditions, "conjunctions": conjunctions}
+        return whereSchemaDict
+        
+        
+        '''
         print(condis)
-        print(conjunc)
+        print(conjunc)'''
 
 def createParse(flag, tokens): #Design Choice, stop user from using () in naming anything
     for i, token in enumerate(tokens):
@@ -155,8 +190,26 @@ def updateParse(flag, tokens): #assumes values are encolsed in single quotes
 
 def insertParse():
     pass
-def deleteParse():
-    pass
+
+def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
+    tableName = None
+    whereClause = None
+    
+    for token in tokens:
+        if token.is_keyword() and token.value.upper() == 'DELETE':
+            continue 
+        elif token.is_keyword() and token.value.upper() == 'FROM':
+            tableName = str(tokens[tokens.index(token) + 1])
+        elif token.is_keyword() and token.value.upper() == 'WHERE':
+            whereClause = whereParse(tokens[tokens.index(token):])
+            break 
+    
+    if flag == 1:
+        schemaDict = {'table': tableName}
+        return schemaDict
+    else:
+        schemaDict = {'table': tableName, 'where': whereClause}
+        return schemaDict
 
 
 def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
@@ -164,6 +217,7 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     index_f = -1 #index of 'FROM' in sql statement
     index_w = -1
     clause = ""
+    schemaDict = {}
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
@@ -179,13 +233,12 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
         #print(token)
 
     #tokens[i].match(sqlparse.tokens.Keyword, 'AND') or tokens[i].match(sqlparse.tokens.Keyword, 'OR')
-    for c in columns:
-        print(f"column: {c}")
-    for t in tables:
-        print(f"table: {t}") 
+    schemaDict.update({"columns": columns})
+    schemaDict.update({"table": tables}) 
     if clause:
         parsedWhere = whereParse(clause)
-        print(parsedWhere)
+        schemaDict.update(parsedWhere) 
+    print(schemaDict)
     return
 
 
