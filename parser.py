@@ -61,6 +61,18 @@ def get_table_name(tokens): #Used for create table and create index
             return token.value
     return " "
 
+def whereParse(clause):
+        #test = sqlparse.sql.Where(tokens)
+        #help(sqlparse.sql.Where)
+        #print(test.Where)
+        betweenParse = re.findall
+        condis = re.split("AND|OR", clause, re.IGNORECASE)
+        conjunc = re.findall("AND|OR", clause, re.IGNORECASE)
+        for i in range(len(condis)):
+            condis[i] = condis[i].strip()
+        print(condis)
+        print(conjunc)
+
 def createParse(flag, tokens): #Design Choice, stop user from using () in naming anything
     for i, token in enumerate(tokens):
         if flag == 1 and token.value.startswith("("):
@@ -114,32 +126,32 @@ def dropParse(flag, tokens):
             return 
 
 def updateParse(flag, tokens): #assumes values are encolsed in single quotes
-	tableName = tokens[2].value
-	setClause = None
-	for token in tokens:
-		if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'SET':
-			setClause = token
-			break
-	if setClause is None:
-		#ERROR
+    tableName = tokens[2].value
+    setClause = None
+    for token in tokens:
+        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'SET':
+            setClause = token
+            break
+    if setClause is None:
+        #ERROR
+        print("error")
 
-	columns = []
-	values = []
+    columns = []
+    values = []
 
-	for token in setClause.tokens[2:]:
-		if token.ttype is sqlparse.Whitespace:
-			continue
-		elif token.ttype is sqlparse.tokens.Punctuation and token.value == ',':
-			continue
-		elif token.ttype is sqlparse.tokens.Name:
-			columns.append(token.value)
-		elif token.ttype is sqlparse.tokens.String:
-			values.append(token.value.strip("'"))
-		else:
-			#error
-
-		schemaDict = {'table': tableName, 'columns': columns, 'values': values}
-		return schemaDict #or whatever to send to execution
+    for token in setClause.tokens[2:]:
+        if token.ttype is sqlparse.Whitespace:
+            continue
+        elif token.ttype is sqlparse.tokens.Punctuation and token.value == ',':
+            continue
+        elif token.ttype is sqlparse.tokens.Name:
+            columns.append(token.value)
+        elif token.ttype is sqlparse.tokens.String:
+            values.append(token.value.strip("'"))
+        else: 
+            print("error") 
+        schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+        return schemaDict #or whatever to send to execution
 
 def insertParse():
     pass
@@ -156,6 +168,7 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
             columns = [''.join(c for c in s if c not in "!\"#$%&'()+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
+            #String.punctuation is not used because we want to preserve * in select statment
             
         if token.match(sqlparse.tokens.Keyword, 'FROM'): #if at end of select or next token is 'WHERE'
             tables = tokens[i+1].value.split(" ")
@@ -171,18 +184,8 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     for t in tables:
         print(f"table: {t}") 
     if clause:
-
-        print(clause)
-        #test = sqlparse.sql.Where(tokens)
-        #help(sqlparse.sql.Where)
-        #print(test.Where)
-        betweenParse = re.findall
-        condis = re.split("AND|OR", clause, re.IGNORECASE)
-        conjunc = re.findall("AND|OR", clause, re.IGNORECASE)
-        for i in range(len(condis)):
-            condis[i] = condis[i].strip()
-        print(condis)
-        print(conjunc)
+        parsedWhere = whereParse(clause)
+        print(parsedWhere)
     return
 
 
