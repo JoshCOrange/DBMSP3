@@ -1,9 +1,14 @@
-import sqlvalidator
+#import sqlvalidator
 import BTrees
-import bplustree
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
-print(help(bplustree.node))
+print(help(BTrees.IIBTree))
+
+#from bplustree import BPlusTree
+#import bplustree
+#print(help(bplustree))
+
+
 '''formatted_sql = sqlvalidator.format_sql("SELECT Employees.LastName, COUNT(Orders.OrderID) AS NumberOfOrders FROM (Orders INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID) GROUP BY LastName HAVING COUNT(Orders.OrderID) > 10 LIMIT 10;")
 
 sql_query = sqlvalidator.parse("SELECT * from table")
