@@ -24,7 +24,7 @@ sqlS5 = '''SELECT *
             FROM PARTS
             WHERE name LIKE ‘W%’ OR
             p# BETWEEN 11 AND 15 OR
-            p# BETWEEN 20 AND 25 OR
+            a_num BETWEEN 20 AND 25 OR
             p# IN (2,4,8)'''
 sqlS6 = '''SELECT col_1, col_2, col_3, col_4 FROM table_1
             WHERE col_1 < 10
@@ -40,9 +40,9 @@ sqlS8 = '''SELECT COUNT(CustomerID), Country
             GROUP BY Country
             HAVING COUNT(CustomerID) BETWEEN 0 and 5;'''
 
-qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
+#qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-#qs = [sqlS8]
+qs = [sqlS5]
 def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
@@ -96,39 +96,43 @@ def get_table_name(tokens): #Used for create table and create index
             return token.value
     return " "
 
-def whereParse(clause):
-        #test = sqlparse.sql.Where(tokens)
-        #help(sqlparse.sql.Where)
-        #print(test.Where)
+def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to do work around it
         conditions = []
         conjunctions = []
+        condis = []
+        conjunc = []
         betweenParse = re.split("BETWEEN", clause, re.IGNORECASE)
         for i in range(len(betweenParse)):
             betweenParse[i] = betweenParse[i].strip()
         #print(betweenParse)
         if len(betweenParse) > 1:
             for i, parsed in enumerate(betweenParse):
+                if i > 0 and i != (len(betweenParse)):
+                    temp = condis[-1].strip()
+                
+                condis = re.split("AND|OR", parsed, re.IGNORECASE)
+                conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
+                
                 if i == 0:
-                    condis = re.split("AND|OR", parsed, re.IGNORECASE)
-                    conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
                     conditions.extend(condis[:-1])
                     conjunctions.extend(conjunc)
                     continue
-            
-                
+
                 if i != (len(betweenParse)):
-                    temp = condis[-1].strip()
-                condis = re.split("AND|OR", parsed, re.IGNORECASE)
-                conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
-                conditions.append(temp + " BETWEEN " + condis[0] + conjunc[0] + condis[1])
-                conditions.extend(condis[2:])
-                conjunctions.extend(conjunc[1:])
+                    conditions.append(temp + " BETWEEN " + condis[0] + conjunc[0] + condis[1])
+                    conjunctions.extend(conjunc[1:])
+                    if i == (len(betweenParse) - 1):
+                        conditions.extend(condis[2:])
+                        break
+                    conditions.extend(condis[3:])
 
         else:
             conditions = re.split("AND|OR", clause, re.IGNORECASE)
             conjunctions = re.findall("AND|OR", clause, re.IGNORECASE)
+        
         for i in range(len(conditions)):
             conditions[i] = conditions[i].strip()
+        
         whereSchemaDict = {"conditions": conditions, "conjunctions": conjunctions}
         return whereSchemaDict
         
@@ -239,9 +243,12 @@ def updateParse(tokens): #assumes values are encolsed in single quotes
             columns.append(token.value)
         elif token.ttype is sqlparse.tokens.String:
             values.append(token.value.strip("'"))
+        elif token.is_keyword() and token.value.upper() == 'WHERE':
+            whereClause = whereParse(tokens[tokens.index(token):])
+            break 
         else: 
             print("error") 
-        schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+        schemaDict = {'table': tableName, 'columns': columns, 'values': values, 'where': whereClause}
         return schemaDict #or whatever to send to execution
 
 def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VALUES (value1, value2, value3);
