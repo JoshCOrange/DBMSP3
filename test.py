@@ -1,8 +1,9 @@
 #import sqlvalidator
+from BTrees.IIBTree import IIBTree
 import BTrees
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
-print(help(BTrees.IIBTree))
+#print(help(BTrees.IIBTree))
 
 #from bplustree import BPlusTree
 #import bplustree
@@ -20,3 +21,12 @@ print(sql_query.is_valid())
 
 with cte as (select * from a)
 select * from cte'''
+
+
+tree = IIBTree()
+tree.insert(1,2)
+tree.insert(1,3)
+tree.insert(1,4)
+tree.insert(1,5)
+
+print(len(tree))
