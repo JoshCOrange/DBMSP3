@@ -2,7 +2,7 @@
 import BTrees
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
-print(help(BTrees.IIBTree))
+print(help(BTrees.OIBTree))
 
 #from bplustree import BPlusTree
 #import bplustree

@@ -1,4 +1,4 @@
-from BTrees.IIBTree import IIBTree
+from BTrees.OIBTree import OIBTree
 import csv
 import pandas as pd
 
@@ -25,7 +25,7 @@ def insert_internal_table(schemaDict):
     df = pd.read_csv("internal_table.csv")
     with open("internal_table.csv", 'a', newline='') as f:
         row = df.append(pd.Series(schemaDict['values'], index=df.columns.values))
-    #length + 1
+        df.to_csv("internal_table.csv")
 
 
 def create_table(schemaDict):   #both for tables and internal table
@@ -42,44 +42,91 @@ def create_index_tree(schemaDict):   #待確認parameter name
     return tree
 
 
-def insert_table(schemaDict):
+def insert_table(schemaDict, tree):
     #schemaDict = {'table': tableName, 'columns': columns, 'values': values}
-    df = pd.read_csv(f"{schemaDict['table']}.csv")
+    #check for duplicate on primary key
+    #檢查primary key是否已存在在primary_key column，若已存在則報錯(not unique)，若不存在則開始insert index tree
+    df = pd.read_csv("internal_table.csv")
+    df_1 = pd.read_csv(f"{schemaDict['table']}.csv")
+    with open("internal_table.csv", 'r', newline='') as f:   #find which column is primary_key
+        for i in df['table_name']:
+            if i == schemaDict['table']:
+                specific_row = df.loc[i]
+                break
+        schema = dict(specific_row[2])   #find its schemaDict
+        primary_key_column_name = schema['primary_key']
+    
+    for i in range(len(schemaDict['columns'])):
+        if primary_key_column_name == schemaDict['columns'][i]:
+            index = i
+            break
+    
+    if schemaDict['values'][index] in df_1['primary_key']:
+        print("Error!!!!!")
+    
     with open(f"{schemaDict['table']}.csv", 'a', newline='') as f:
-        row = df.append(pd.Series(schemaDict['values'], index=df.columns.values))
+        row = df_1.append(pd.Series(schemaDict['values'], index=df_1.columns.values))
+        df_1.to_csv(f"{schemaDict['table']}.csv")
+    
+    df_2 = pd.read_csv("internal_table.csv")   #for row number
+    with open("internal_table.csv", '+', newline='') as f:
+        for i in df_2['table_name']:   #in internal table column "table name"
+            if i == schemaDict['table']:
+                specific_row = df_2.loc[i]
+                break
+        length = int(specific_row[4])   #find its schemaDict
+        length += 1
+        specific_row[4] = length
+        for i in df_2['table_name']:   #in internal table column "table name"
+            if i == schemaDict['table']:
+                df_2.loc[i] = specific_row
+                break
+        df_2.to_csv("internal_table.csv")
+    
+    insert_index_tree(tree, schemaDict['values'][index], length)   #tree, key, value
+    return schemaDict['values'][index], length
+    
+
+def insert_index_tree(tree, key, row_number):
+    #user can also delete index tree (but we don't want the index tree to be deleted) --> when executing, avoid any index to be called index tree name
+    #每個node存一個key-value pair (primary key, row_number)
+    #this is also used in updating index tree
+    tree.insert(key, row_number)
 
 
-def insert_index_tree(schemaDict, row_num):
-    #user can also delete index tree (but we don't want the index tree to be deleted) --> when executing，avoid any index to be called index tree name
-    #primary keys need to be hash(), and avoid collision
-    pass
-
-
-def update_table(schemaDict):
+def update_table(schemaDict, tree):   #還未完成
     #schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+    delete_index_tree()   #再回來改, 把pointer刪掉
+    key, row_number = insert_table(schemaDict, tree)   #append一行在最下面
+    
     '''
     #用Pandas抓heading出來(先確定column順序)
-    #先進internal table找primary key(某一個column name/heading), 存下來(該column, value=primary key)
+    #先進internal table找primary key(某一個column name/heading),存下來(該column, value=primary key)
     #進去Schema找到同樣名字的column,把list第幾位抓出來,再去values同一個位置抓出來
     #根據primary key用index tree定位row,然後更新那個row
-    '''
+    
     df_1 = pd.read_csv(f"{schemaDict['table']}.csv")
     df_2 = pd.read_csv("internal_table.csv")
     with open("internal_table.csv", 'r', newline='') as f:
         for i in df_2['table_name']:   #in internal table column "table name"
             if i == schemaDict['table']:
-                primary_key = i
-    
+                specific_row = df_2.loc[i]
+                break
+        schema = dict(specific_row[2])   #find its schemaDict
+        primary_key = schema['primary_key']
+        
     with open(f"{schemaDict['table']}.csv", 'a', newline='') as f:
         row = df.append(pd.Series(schemaDict['values'], index=df.columns.values))
-    #根據primary key用index tree定位row,然後更新那個row
-
-
-def update_index_tree():
-    pass
-
+        #根據primary key用index tree定位row,然後更新那個row
+        df.to_csv(f"{schemaDict['table']}.csv")
+    '''
     
-def delete_index_tree():   #csv file do not involve delete, just index tree
+    
+def delete_index_tree(tree, schemaDict=None, key=None):   #csv file do not involve delete, just index tree
+    #consider how to deal with foreign key
+    #cascade, set null, restrict
+    #parser: delete
+    #two mode: given schemaDict or given primary key
     pass
 
 
@@ -89,12 +136,14 @@ def drop_table(schemaDict):
         df_1 = df.drop(df.index[0:])
         
 
-def drop_index(index_name, table_name):   #index name對應的table_name, both are string
-    pass
-    #把root delete
+def drop_index(tree):
+    #delete root
+    for key in tree.keys():
+        delete_index_tree(tree=tree, key=key)
+    tree.clear()
+    
 
-
-def search_table(schemaDict):   #table_name, column_name(要return哪些column), condition(condition_column, Like w%) (a = x)
+def search_table(Dict):   #Dict = table_name, column_name(要return哪些column), condition(condition_column, Like w%) (a = x), 也可以要更多東西
     #根據condition_column,找到有那個值(Like w%)的那個row,取出那整個row,再根據column_name看要回傳哪些對應的column的值傳回去
     #需要回傳所有符合條件的(rows)對應的column
     pass
@@ -113,7 +162,7 @@ def print_tree():   #print iteritems()
 
 
 
-if __name__ == '__main__':   #need to be deleted (main is not here)
+if __name__ == '__main__':   #need to be deleted (main function is not here)
     schemaDict = {
         "table_name": "ABC",
         "primary_key": ["name_x1", "name_x2"],
@@ -128,16 +177,15 @@ if __name__ == '__main__':   #need to be deleted (main is not here)
     schemaDict2 = {
         "table_name": "Table",
         "primary_key": "table_name",
-        "column_name": ["table_name", "Dict_CT", "Index"],
-        "column_type": ["string", "dictionary", "string"],
-        "length":
+        "column_name": ["table_name", "schemaDict", "Root_Index", "length"],
+        "column_type": ["string", "dictionary", "string", "integer"]
     }
     
     create_internal_table(schemaDict2)
     create_table(schemaDict)
     #insert_table(schemaDict)
     #update_table(schemaDict2)
-    drop_table(schemaDict)
+    #drop_table(schemaDict)
 
 '''
 f = open(, "w")
