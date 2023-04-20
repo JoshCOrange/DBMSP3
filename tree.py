@@ -3,16 +3,16 @@ import csv
 import pandas as pd
 
 '''
-def create_tree:   #index, table, or database  --> how to initialize object
-def drop:   #drop一整個table或index  --> clear() + pop()
-def search:   #select, 先假設只searh一個值  --> get()
+def create_tree:   #index, table, or database
+def drop:   #drop a whole table or index
+def search:   #select, assume only search one value first
 
-def use:   #define which table to use
+def use:   #define which database to use (no need)
 def print_tree:   #print iteritems()
 
-def insert:   #insert()
-def delete:   #delete certain rows --> pop()  --> no need to do on csv file
-def update:  #update() --> update_table最後一步：根據primary key用index tree定位row,然後更新那個row,還未寫
+def insert:
+def delete:   #no need to do on csv file
+def update:   #update_table() last step：according to primary key, use index tree locate row, then update that row (haven't write)
 '''
 
 def create_internal_table(schemaDict):
@@ -34,18 +34,17 @@ def create_table(schemaDict):   #both for tables and internal table
     table = pd.DataFrame(columns=column_names)
     #print(table)
     table.to_csv(f"{schemaDict['table_name']}.csv")
-    return table   #return the list of file objects
+    return table   #return a list of file objects
 
 
-def create_index_tree(schemaDict):   #待確認parameter name
+def create_index_tree(schemaDict):
     tree = IIBTree()
     return tree
 
 
 def insert_table(schemaDict, tree):
     #schemaDict = {'table': tableName, 'columns': columns, 'values': values}
-    #check for duplicate on primary key
-    #檢查primary key是否已存在在primary_key column，若已存在則報錯(not unique)，若不存在則開始insert index tree
+    #check for duplicate on primary key, if existing --> return Error
     df = pd.read_csv("internal_table.csv")
     df_1 = pd.read_csv(f"{schemaDict['table']}.csv")
     with open("internal_table.csv", 'r', newline='') as f:   #find which column is primary_key
@@ -89,15 +88,15 @@ def insert_table(schemaDict, tree):
 
 def insert_index_tree(tree, key, row_number):
     #user can also delete index tree (but we don't want the index tree to be deleted) --> when executing, avoid any index to be called index tree name
-    #每個node存一個key-value pair (primary key, row_number)
+    #every node store a key-value pair (primary key, row_number)
     #this is also used in updating index tree
     tree.insert(key, row_number)
 
 
-def update_table(schemaDict, tree):   #還未完成
+def update_table(schemaDict, tree):   #haven't finished
     #schemaDict = {'table': tableName, 'columns': columns, 'values': values}
     delete_index_tree()   #再回來改, 把pointer刪掉
-    key, row_number = insert_table(schemaDict, tree)   #append一行在最下面
+    key, row_number = insert_table(schemaDict, tree)   #append a new row at the end of the csv file
     
     '''
     #用Pandas抓heading出來(先確定column順序)
@@ -122,7 +121,8 @@ def update_table(schemaDict, tree):   #還未完成
     '''
     
     
-def delete_index_tree(tree, schemaDict=None, key=None):   #csv file do not involve delete, just index tree
+def delete_index_tree(tree, schemaDict=None, key=None):   #待檢查
+    #csv file do not involve delete, just index tree
     #consider how to deal with foreign key
     #cascade, set null, restrict
     #parser: delete
@@ -137,21 +137,42 @@ def drop_table(schemaDict):
         
 
 def drop_index(tree):
-    #delete root
+    #just delete root
     for key in tree.keys():
         delete_index_tree(tree=tree, key=key)
     tree.clear()
     
 
-def search_table(Dict):   #Dict = table_name, column_name(要return哪些column), condition(condition_column, Like w%) (a = x), 也可以要更多東西
-    #根據condition_column,找到有那個值(Like w%)的那個row,取出那整個row,再根據column_name看要回傳哪些對應的column的值傳回去
+def search_table(Dict):
+    #Dict = table_name, column_name(要return哪些column), condition(condition_column, Like w%) (a = x)
+    #'where': {'conditions': ['name LIKE ‘W%’', 'p# BETWEEN 11 AND 15', 'a_num BETWEEN 20 AND 25', 'p# IN (2,4,8)'] and "=, >, <, >=, <=, !="}
+    #condition_column: need to search, column_name: need to return
     #需要回傳所有符合條件的(rows)對應的column
-    pass
+    txt = Dict['where']['conditions'][0]   #condition value
+    search_conditions = txt.split()
+    search_column_name = search_conditions[0]   #get column name we need to search (only one column)
+    
+    if search_conditions[1] == "LIKE" or "IN" or ">" or "<" or "=" or ">=" or "<=" or "!=":
+        search_value = search_conditions[2]
+    elif search_conditions[1] == "BETWEEN":
+        search_value_1 = search_conditions[2]
+        search_value_2 = search_conditions[4]
+    
+    df = pd.read_csv(f"{Dict['table_name']}.csv")
+    with open(f"{Dict['table_name']}.csv", 'r', newline='') as f:
+        #根據condition_column,找到有那個值(ex:w%)的那個row,取出那整個row,再根據column_name看要回傳哪些對應的column的值傳回去
+        for i in range(len(Dict['ta'][])):
+            
+        
 
 
-def search_index_tree():
-    pass
-
+def search_index_tree(tree, key):
+    if tree.has_key(key) is true:
+        row_number = tree.get(key[, default=None])
+    else:
+        row_number = "Not Found!!!!!"
+    return row_number
+    
 
 def use():   #define which database to use
     pass
