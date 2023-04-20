@@ -1,5 +1,7 @@
 #import sqlvalidator
+from BTrees.IIBTree import IIBTree
 import BTrees
+import re
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
 print(help(BTrees.OIBTree))
@@ -20,3 +22,18 @@ print(sql_query.is_valid())
 
 with cte as (select * from a)
 select * from cte'''
+print(re.split("AND|aND|AnD|ANd|anD|aNd|And|and|OR|oR|Or|or", "11 And 15 oR a_num >= 20 OR p# IN (2,4,8)"))
+exit()
+tree = IIBTree()
+tree.insert(1,2)
+tree.insert(1,3)
+tree.insert(1,4)
+tree.insert(1,5)
+#print(tree)
+
+print(tree.get(1))
+
+tree.pop(1)
+tree.insert(1,5)
+
+print(tree.get(1))
