@@ -131,6 +131,8 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
             conjunctions = re.findall("AND|OR", clause, re.IGNORECASE)
         
         for i in range(len(conditions)):
+            if i  == 0:
+                conditions[i] = " ".join(conditions[i].split(" ")[1:]).strip()
             conditions[i] = conditions[i].strip()
         
         whereSchemaDict = {"conditions": conditions, "conjunctions": conjunctions}
