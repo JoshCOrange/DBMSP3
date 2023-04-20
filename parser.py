@@ -24,7 +24,7 @@ sqlS5 = '''SELECT *
             FROM PARTS
             WHERE name LIKE ‘W%’ OR
             p# BETWEEN 11 AND 15 OR
-            a_num BETWEEN 20 AND 25 OR
+            a_num >= 20 OR
             p# IN (2,4,8)'''
 sqlS6 = '''SELECT col_1, col_2, col_3, col_4 FROM table_1
             WHERE col_1 < 10
@@ -101,17 +101,22 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
         conjunctions = []
         condis = []
         conjunc = []
+        split = r"AND|aND|AnD|ANd|anD|aNd|And|and|OR|oR|Or|or"
         betweenParse = re.split("BETWEEN", clause, re.IGNORECASE)
+        #print(betweenParse)
         for i in range(len(betweenParse)):
-            betweenParse[i] = betweenParse[i].strip()
+            betweenParse[i] = ' '.join(betweenParse[i].replace("\n", "").strip().split())
         #print(betweenParse)
         if len(betweenParse) > 1:
             for i, parsed in enumerate(betweenParse):
                 if i > 0 and i != (len(betweenParse)):
                     temp = condis[-1].strip()
                 
-                condis = re.split("AND|OR", parsed, re.IGNORECASE)
-                conjunc = re.findall("AND|OR", parsed, re.IGNORECASE)
+                print(parsed)
+                condis = re.split(split, parsed)
+                print(condis)
+                conjunc = re.findall(split, parsed)
+                #print(conjunc)
                 
                 if i == 0:
                     conditions.extend(condis[:-1])
@@ -127,8 +132,8 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
                     conditions.extend(condis[3:])
 
         else:
-            conditions = re.split("AND|OR", clause, re.IGNORECASE)
-            conjunctions = re.findall("AND|OR", clause, re.IGNORECASE)
+            conditions = re.split(split, clause)
+            conjunctions = re.findall(split, clause)
         
         for i in range(len(conditions)):
             if i  == 0:
