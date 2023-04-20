@@ -3,7 +3,7 @@ from BTrees.IIBTree import IIBTree
 import BTrees
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
-#print(help(BTrees.IIBTree))
+print(help(BTrees.IIBTree))
 
 #from bplustree import BPlusTree
 #import bplustree
@@ -28,5 +28,11 @@ tree.insert(1,2)
 tree.insert(1,3)
 tree.insert(1,4)
 tree.insert(1,5)
+#print(tree)
 
-print(len(tree))
+print(tree.get(1))
+
+tree.pop(1)
+tree.insert(1,5)
+
+print(tree.get(1))
