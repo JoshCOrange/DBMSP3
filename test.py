@@ -40,10 +40,10 @@ def Liketest(condition): #str = LIKE 的condition
             regex=True
         )
     ).any(axis=1)
-    print (df[mask]) #return the all rows that fit the condition
+    return (df[mask]) #return the all rows that fit the condition
 
 
-Liketest("%") #test for LIKE
+print(Liketest("%")) #test for LIKE
 exit()
 
 
