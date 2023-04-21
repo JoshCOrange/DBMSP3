@@ -11,7 +11,8 @@ import pandas as pd
 #import bplustree
 #print(help(bplustree))
 
-def LIKE(str): #reference: https://stackoverflow.com/questions/47052/what-code-would-i-use-to-convert-a-sql-like-expression-to-a-regex-on-the-fly
+#reference: https://stackoverflow.com/questions/47052/what-code-would-i-use-to-convert-a-sql-like-expression-to-a-regex-on-the-fly
+def LIKE(str): 
     regex_pattern = "^" + re.sub(
         "[%_]|\[[^]]*\]|[^%_[]+",
         lambda match:
@@ -23,7 +24,7 @@ def LIKE(str): #reference: https://stackoverflow.com/questions/47052/what-code-w
     print(regex_pattern)
     return regex_pattern
 
-
+#reference: https://stackoverflow.com/questions/32614357/search-and-filter-pandas-dataframe-with-regular-expressions
 def Liketest(condition): #str = LIKE 的condition
     reg = LIKE(condition)
     df = pd.DataFrame(
