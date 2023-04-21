@@ -43,7 +43,28 @@ def Liketest(condition): #str = LIKE 的condition
     return (df[mask]) #return the all rows that fit the condition
 
 
-print(Liketest("%")) #test for LIKE clause
+#print(Liketest("%")) #test for LIKE clause
+
+
+
+# Import pandas package
+import pandas as pd
+
+# Define a dictionary containing employee data
+data = {'Name':['Jai', 'Princi', 'Gaurav', 'Anuj'],
+		'Age':[27, 24, 22, 32],
+		'Address':['Delhi', 'Kanpur', 'Allahabad', 'Kannauj'],
+		'Qualification':['Msc', 'MA', 'MCA', 'Phd']}
+
+# Convert the dictionary into DataFrame
+df = pd.DataFrame(data)
+row = df.iloc[1]
+#print(row)
+
+# select two columns
+a = ['Name', 'Qualification']
+print(row[a])
+
 exit()
 
 
