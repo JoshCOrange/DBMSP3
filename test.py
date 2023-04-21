@@ -43,7 +43,7 @@ def Liketest(condition): #str = LIKE 的condition
     return (df[mask]) #return the all rows that fit the condition
 
 
-print(Liketest("%")) #test for LIKE
+print(Liketest("%")) #test for LIKE clause
 exit()
 
 
