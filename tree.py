@@ -2,7 +2,8 @@ from BTrees.OIBTree import OIBTree
 import csv
 import pandas as pd
 import json
-
+import ast
+import re
 '''
 def create_tree:   #index, table, or database
 def drop:   #drop a whole table or index
@@ -16,7 +17,11 @@ def delete:   #no need to do on csv file
 def update:   #update_table() haven't write
 '''
 
-def LIKE(str):
+def readDict(schemaDict): 
+    return ast.literal_eval(schemaDict)
+
+def LIKE(str): #Change Like clause conndition , w%, into regular expression. w%=all string that starts with w. w_, w+any one character
+#https://www.w3schools.com/sql/sql_like.asp 
     regex_pattern = "^" + re.sub(
         "[%_]|\[[^]]*\]|[^%_[]+",
         lambda match:
@@ -196,10 +201,11 @@ def update_table(schemaDict, tree):   #haven't finished
     '''
     
     
-def delete_index_tree(tree, schemaDict=None, key=None):
+def delete_index_tree(tree, schemaDict=None, key=None):  #TODO: take out the search part 
     #csv file do not involve delete, just delete the node in index tree
     #consider 1. how to deal with foreign key   2. cascade, set null, restrict
     #two modes: given (tree & schemaDict) or given (tree & primary key)
+    #
     '''
     1. tree & schemaDict: schemaDict is similar to search_table() (have 'where' clause --> 'where': {'conditions': ['name LIKE ‘W%’', 'p# BETWEEN 11 AND 15', 'a_num BETWEEN 20 AND 25', 'p# IN (2,4,8)'] and "=, >, <, >=, <=, !="})  --> check/reference SQL delete
     2. tree & primary key: we are dropping table
@@ -297,10 +303,15 @@ def drop_index(tree):
 
 def search_table(Dict, tree):   #haven't finish (if search_column_name == 'primary_key')
     #Dict = table_name, column_name(要return哪些column), condition(condition_column, Like w%) (a = x)
+    #Dict = {
+    # 'table_name' = table_name
+    # 'column_name' = column_1, column_2, .... essentially the columns needed for select
+    # 'where': {condition: condition statement}
+    #}
     #'where': {'conditions': ['name LIKE ‘W%’', 'p# BETWEEN 11 AND 15', 'a_num BETWEEN 20 AND 25', 'p# IN (2,4,8)'] and "=, >, <, >=, <=, !="}
     #condition_column: need to search, column_name: need to return
     #需要回傳所有符合條件的(rows)對應的column
-    txt = Dict['where']['conditions'][0]   #condition value
+    txt = Dict['where']['condition']   #condition value
     search_conditions = txt.split(' ')
     search_column_name = search_conditions[0]   #get column name we need to search (only one column)
     
@@ -424,7 +435,7 @@ def print_tree():   #print iteritems()
 
 
 if __name__ == '__main__':   #need to be deleted (just for testing)
-    schemaDict = {
+    schemaDict = { #CT
         "table_name": "ABC",
         "primary_key": ["name_x1", "name_x2"],
         "column_name": ["name_x1", "name_x2", "name_x3", "name_x4"],
@@ -435,7 +446,7 @@ if __name__ == '__main__':   #need to be deleted (just for testing)
         "foreign_delete": ["S_1", "S_2"]
     }
     
-    schemaDict2 = {   #need to deal with index tree's location in execution step
+    schemaDict2 = {   #need to deal with index tree's location in execution step. The schema 
         "table_name": "Table",
         "primary_key": "table_name",
         "column_name": ["table_name", "schemaDict", "length", "foreign_start", "foreign_end"],
@@ -448,6 +459,22 @@ if __name__ == '__main__':   #need to be deleted (just for testing)
     #update_table(schemaDict2)
     #drop_table(schemaDict)
 
+'''
+Rel-i-i-10
+10 tuples: {<1, 1>, <2, 2>, <3, 3>, …, <10,10>}
+
+primary key | value
+1              1
+2              2
+3              3
+4              4
+5              5
+6              6
+7              7
+8              8
+9              9
+10             10
+'''
 
 
 
@@ -465,3 +492,7 @@ then build index tree
 
 從csv拉出來全為string
 '''
+#Fix delete by removing the search part.
+#Update table
+#Handle how store dictionary
+#

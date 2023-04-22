@@ -3,6 +3,7 @@ import string
 import re
 import copy
 
+
 sqlCT = '''CREATE TABLE public.actor (
     actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
     first_name VARCHAR(45) NOT NULL,
@@ -43,6 +44,9 @@ sqlS8 = '''SELECT COUNT(CustomerID), Country
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
 qs = [sqlS5]
+
+
+
 def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
