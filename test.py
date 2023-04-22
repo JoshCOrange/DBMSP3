@@ -3,6 +3,7 @@ from BTrees.IIBTree import IIBTree
 import BTrees
 import re
 import pandas as pd
+import ast
 #print(help(BTrees))
 #print(help(BTrees.IOBTree))
 #print(help(BTrees.OIBTree))
@@ -10,6 +11,32 @@ import pandas as pd
 #from bplustree import BPlusTree
 #import bplustree
 #print(help(bplustree))
+
+
+def readDict(schemaDict):
+    '''dic = {"Name": "Zara", "Age": ["a", "b","c"]}
+    #print "Equivalent String : %s" % str (dict)
+    with open("dict_test.txt", "w") as f:
+        f.write(str (dic)) STORE IN str(dict)!!!!!!!!!!!!!!
+    with open("dict_test.txt", "r") as f:
+        t = f.read()'''
+     
+    return ast.literal_eval(schemaDict)
+schemaDict = {
+    "table_name": "ABC",
+    "primary_key": ["name_x1", "name_x2"],
+    "column_name": ["name_x1", "name_x2", "name_x3", "name_x4"],
+    "column_type": ["integer", "string", "integer", "integer"],
+    "foreign_key": ["name_x3", "name_x4"],
+    "foreign_table": ["T_1", "T_2"],
+    "foreign_column": ["C_1", "C_2"],
+    "foreign_delete": ["S_1", "S_2"]
+}
+print(type(readDict(str(schemaDict))))
+
+exit()
+
+
 
 #reference: https://stackoverflow.com/questions/47052/what-code-would-i-use-to-convert-a-sql-like-expression-to-a-regex-on-the-fly
 def LIKE(str): 
