@@ -116,9 +116,9 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
                 if i > 0 and i != (len(betweenParse)):
                     temp = condis[-1].strip()
                 
-                print(parsed)
+                #print(parsed)
                 condis = re.split(split, parsed)
-                print(condis)
+                #print(condis)
                 conjunc = re.findall(split, parsed)
                 #print(conjunc)
                 
