@@ -15,15 +15,8 @@ def drop_index(tree):
 def drop_table(schemaDict, tree):
 '''
 
-def test_create_internal_table():
-    schemaDict_internal_table = {
-        "table_name": "Table",
-        "primary_key": "table_name",
-        "column_name": ["table_name", "schemaDict", "length", "foreign_start", "foreign_end"],
-        "column_type": ["string", "dictionary", "integer", "dictionary", "dictionary"]
-    }
-    
-    create_internal_table(schemaDict_internal_table)
+def test_create_internal_table():    
+    create_internal_table()
 
 
 def test_create_table(schemaDict_tables):#both finish checking insert_internal_table(row)

@@ -35,6 +35,12 @@ def Like_check(df, column_name, condition): #str = LIKE's condition
 
 
 def create_internal_table(schemaDict):
+    schemaDict_internal_table = {
+        "table_name": "Table",
+        "primary_key": "table_name",
+        "column_name": ["table_name", "schemaDict", "length", "foreign_start", "foreign_end"],
+        "column_type": ["string", "dictionary", "integer", "dictionary", "dictionary"]
+    }
     column_names = schemaDict.get('column_name', [])
     table = pd.DataFrame(columns=column_names)
     #print(table)
