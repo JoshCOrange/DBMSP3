@@ -277,28 +277,20 @@ def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VAL
                 if tableName[i] == '(':
                     tableName = tableName[:i]
                     break
-            print(tableName)
-            break
-
-    for token in tokens:
-        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'VALUES':
-            valuesStartIndex = tokens.index(token) + 1
-            break
-
-        if token.ttype is sqlparse.tokens.Punctuation and token.value == '(':
+            #print(tableName)
             columnsStartIndex = tokens.index(token) + 1
-            while True:
-                columnName = str(tokens[columnsStartIndex])
-                if columnName == ')':
-                    break
-                if columnName != ',':
-                    columns.append(columnName)
-                columnsStartIndex += 1
+            valuesStartIndex = tokens.index(token) + 2
+            break
+    #print(str(tokens[columnsStartIndex]))
+    #print(str(tokens[valuesStartIndex]))
+    columns = str(tokens[columnsStartIndex]).split('(')[1:] # split on ( to find the columns
+    columns  = columns[0].split(', ') # split on ', ' for each column name
+    columns[-1] = columns[-1][:-1] # remove ')' on the last column name
 
-    for token in tokens[valuesStartIndex:]:
-        if token.ttype is sqlparse.tokens.String:
-            values.append(token.value.strip("'"))
-
+    values = str(tokens[valuesStartIndex]).split('(')[1:] # split on ( to find the values
+    values  = values[0].split(', ') # split on ', ' for each value
+    values[-1] = values[-1][:-1] # remove ')' on the last value
+ 
     schemaDict = {'table': tableName, 'columns': columns, 'values': values}
     return schemaDict
 
