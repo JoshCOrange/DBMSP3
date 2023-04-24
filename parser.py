@@ -87,7 +87,7 @@ def readQuery(qs):
                 flag = 1
                 for i, token in enumerate(tokens):
                     if token.value.startswith("WHERE"): flag = 0
-                schemaDict = deleteParse(tokens)
+                schemaDict = deleteParse(flag, tokens)
                 execution = ('delete', schemaDict)
         
         return execution
@@ -235,34 +235,24 @@ def dropParse(flag, tokens):
 
 def updateParse(tokens): #assumes values are encolsed in single quotes
     tableName = tokens[2].value
-    setClause = None
-    for token in tokens:
-        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'SET':
-            setClause = token
-            break
-    if setClause is None:
-        #ERROR
-        print("error")
-
     columns = []
     values = []
+    setClause = []
+    for i, token in enumerate(tokens):
+        #print(token)
+        if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'SET':
+            setClause = tokens[i+1].value.split(',')
+        elif token.value.startswith("WHERE"):
+            clause = str(tokens[i])
+            whereClause = whereParse(clause)
 
-    for token in setClause.tokens[2:]:
-        if token.ttype is sqlparse.Whitespace:
-            continue
-        elif token.ttype is sqlparse.tokens.Punctuation and token.value == ',':
-            continue
-        elif token.ttype is sqlparse.tokens.Name:
-            columns.append(token.value)
-        elif token.ttype is sqlparse.tokens.String:
-            values.append(token.value.strip("'"))
-        elif token.is_keyword() and token.value.upper() == 'WHERE':
-            whereClause = whereParse(tokens[tokens.index(token):])
-            break 
-        else: 
-            print("error") 
-        schemaDict = {'table': tableName, 'columns': columns, 'values': values, 'where': whereClause}
-        return schemaDict #or whatever to send to execution
+    for clause in setClause:
+        tmp = clause.split('=')
+        columns.append(tmp[0].strip())
+        values.append(tmp[1].strip())
+        #print(tmp)
+    schemaDict = {'table': tableName, 'columns': columns, 'values': values, 'where': whereClause}
+    return schemaDict #or whatever to send to execution
 
 def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VALUES (value1, value2, value3);
     tableName = None
@@ -299,12 +289,12 @@ def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
     whereClause = None
     
     for token in tokens:
-        if token.is_keyword() and token.value.upper() == 'DELETE':
+        if token.match(sqlparse.tokens.Keyword, 'DELETE'):
             continue 
-        elif token.is_keyword() and token.value.upper() == 'FROM':
+        elif token.match(sqlparse.tokens.Keyword, 'FROM'):
             tableName = str(tokens[tokens.index(token) + 1])
-        elif token.is_keyword() and token.value.upper() == 'WHERE':
-            whereClause = whereParse(tokens[tokens.index(token):])
+        elif token.value.startswith("WHERE"):
+            whereClause = whereParse(token.value)
             break 
     
     if flag == 1:
