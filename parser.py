@@ -51,6 +51,7 @@ def readQuery(qs):
     #query = input("Please enter query")
     #sql = "DROP TABLE test"
     schemaDict = {}
+    execution = ()
     for sql in qs:
         tiflag = 0 # 1 for table, -1 for index, 0 for other
         parsed = sqlparse.parse(sql)
@@ -87,10 +88,11 @@ def readQuery(qs):
                 for i, token in enumerate(tokens):
                     if token.value.startswith("WHERE"): flag = 0
                 schemaDict = deleteParse(tokens)
-                execution = ('deleteParse', schemaDict)
-            
-        print(schemaDict)
-        print ("---"*20)
+                execution = ('delete', schemaDict)
+        
+        return execution
+        #print(schemaDict)
+        #print ("---"*20)
 
 
 
@@ -267,9 +269,15 @@ def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VAL
     columns = []
     values = []
 
-    for token in tokens:
+    for i, token in enumerate(tokens):
         if token.ttype is sqlparse.tokens.Keyword and token.value.upper() == 'INTO':
             tableName = str(tokens[tokens.index(token) + 1])
+            for i in range(len(tableName)):
+                #print(tableName[i] == '(')
+                if tableName[i] == '(':
+                    tableName = tableName[:i]
+                    break
+            print(tableName)
             break
 
     for token in tokens:
