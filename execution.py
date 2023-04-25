@@ -55,13 +55,28 @@ def andConjunctions (df_1, df_2):
     new_df = pd.merge(df_1, df_2).reset_index(drop=True)
     return new_df
 
+def parseAggregation(column): #Mainly to parse out the column names for select that's within aggrigation.  
+                                #Return the column name and aggregation type
+    aggregation = None
+    column_name = None
+    for i in range(len(column)):
+        if column[i] == "(":
+            start = i+1
+            column_name = column[start:-1]
+            aggregation = column[:i]
+    #print(column_name)
+    #print(aggregation)
+    
+    if aggregation is None: 
+        return column, None
+    return column_name, aggregation
 
 
 
 def selectKeyword(schemaDict):
     conditions =  schemaDict['where']['conditions']
     conjunctions = schemaDict['where']['conjunctions']
-    table_name = schemaDict.get('table')[0]
+    table_name = schemaDict.get('table_name')[0]
     treePtr = tableTreeRelation[table_name]
     #Dict = {
     # 'table_name': table_name
@@ -120,20 +135,6 @@ def selectKeyword(schemaDict):
    
 
     #print("hello")
-def parseAggregation(column): #Mainly to parse out the column names for select that's within aggrigation.  
-                                #Return the column name and aggregation type
-    aggregation = None
-    column_name = None
-    for i in range(len(column)):
-        if column[i] == "(":
-            start = i+1
-            column_name = column[start:-1]
-            aggregation = column[:i]
-    #print(column_name)
-    #print(aggregation)
-    
-    if aggregation is None: return column, None
-    return column_name, aggregation
 
 
 def updateKeyword(schemaDict):

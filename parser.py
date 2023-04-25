@@ -257,7 +257,7 @@ def updateParse(tokens): #assumes values are encolsed in single quotes
         columns.append(tmp[0].strip())
         values.append(tmp[1].strip())
         #print(tmp)
-    schemaDict = {'table': tableName, 'columns': columns, 'values': values, 'where': whereClause}
+    schemaDict = {'table_name': tableName, 'columns': columns, 'values': values, 'where': whereClause}
     return schemaDict #or whatever to send to execution
 
 def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VALUES (value1, value2, value3);
@@ -287,7 +287,7 @@ def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VAL
     values  = values[0].split(', ') # split on ', ' for each value
     values[-1] = values[-1][:-1] # remove ')' on the last value
  
-    schemaDict = {'table': tableName, 'columns': columns, 'values': values}
+    schemaDict = {'table_name': tableName, 'columns': columns, 'values': values}
     return schemaDict
 
 def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
@@ -304,10 +304,10 @@ def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
             break 
     
     if flag == 1:
-        schemaDict = {'table': tableName}
+        schemaDict = {'table_name': tableName}
         return schemaDict
     else:
-        schemaDict = {'table': tableName, 'where': whereClause}
+        schemaDict = {'table_name': tableName, 'where': whereClause}
         return schemaDict
 
 
@@ -325,7 +325,7 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
         if token.match(sqlparse.tokens.Keyword, 'FROM'): #if at end of select or next token is 'WHERE'
             table_names = tokens[i+1].value.split(" ")
             #tables_names = [''.join(c for c in s if c not in string.punctuation) for s in table_names if s]
-            schemaDict.update({"table": table_names}) 
+            schemaDict.update({"table_name": table_names}) 
         
         if token.value.startswith("WHERE"):
             clause = str(tokens[i])
