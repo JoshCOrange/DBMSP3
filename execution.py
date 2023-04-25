@@ -15,64 +15,69 @@ def main():
     #make dictionary hard coded in create_internal_table function
     #create all the required relations via parser
     query = "hi"
+    
     while query != "exit":
-        query = input("SQL> ").strip()
-        if query == "exit":
-            break
-        if query == "":
+        try:
+            query = input("SQL> ").strip()
+            if query == "exit":
+                break
+            if query == "":
+                continue
+            queryList = []
+            queryList.append(query)
+            myTuple = readQuery(queryList)
+            keyword = myTuple[0]
+            schemaDict = myTuple[1]
+
+            #where does search go here
+            if keyword == "create table":
+                newTree = create_table(schemaDict)
+                table_name = schemaDict.get('table_name')
+                tableTreeRelation[table_name] = newTree
+            
+            elif keyword == "drop table":
+                table_name = schemaDict.get('table_name')
+                treePtr = tableTreeRelation[table_name]
+                drop_table(schemaDict, treePtr)
+                os.remove(table_name + ".csv")
+                df = pd.read_csv("internal_table.csv")
+                # Set the index of the DataFrame to the country name
+                with open("internal_table.csv", 'r', newline='') as f: 
+                    df = df.set_index("table_name")
+                    new_df= df.drop(table_name)
+                    new_df = new_df.reset_index()
+                    new_df.to_csv("internal_table.csv", index=False)
+
+            elif keyword == "select": #where
+                if len(schemaDict['columns']) == 1:
+                    col, aggr = parseAggregation(schemaDict['columns'][0])
+                if schemaDict.get('where') is not None:
+                    ans, col, aggr = selectKeyword(schemaDict)
+                else:
+                    ans = pd.read_csv(schemaDict.get('table_name')[0] + ".csv")
+                if schemaDict.get('group_by') is not None:
+                    ans = groupBy(schemaDict, ans)
+                if aggr is not None:
+                    ans = selectAggr(col, ans, aggr)
+                if schemaDict.get('order_by') is not None:
+                    ans = orderBy(schemaDict, ans)
+                print(ans)
+            
+            elif keyword == "update": #where
+                updateKeyword(schemaDict)
+            
+            elif keyword == "insert":
+                table_name = schemaDict['table_name']
+                treePtr = tableTreeRelation[table_name]
+                insert_table(schemaDict, treePtr)
+            
+            elif keyword == "delete": #where
+                tableName = schemaDict.get('table_name')
+                treePtr = tableTreeRelation[tableName]
+                deleteKeyword(schemaDict)
+        except:
+            print("There is probably a syntax error in SQL")
             continue
-        queryList = []
-        queryList.append(query)
-        myTuple = readQuery(queryList)
-        keyword = myTuple[0]
-        schemaDict = myTuple[1]
-
-        #where does search go here
-        if keyword == "create table":
-            newTree = create_table(schemaDict)
-            table_name = schemaDict.get('table_name')
-            tableTreeRelation[table_name] = newTree
-        
-        elif keyword == "drop table":
-            table_name = schemaDict.get('table_name')
-            treePtr = tableTreeRelation[table_name]
-            drop_table(schemaDict, treePtr)
-            os.remove(table_name + ".csv")
-            df = pd.read_csv("internal_table.csv")
-            # Set the index of the DataFrame to the country name
-            with open("internal_table.csv", 'r', newline='') as f: 
-                df = df.set_index("table_name")
-                new_df= df.drop(table_name)
-                new_df = new_df.reset_index()
-                new_df.to_csv("internal_table.csv", index=False)
-
-        elif keyword == "select": #where
-            if len(schemaDict['columns']) == 1:
-                col, aggr = parseAggregation(schemaDict['columns'][0])
-            if schemaDict.get('where') is not None:
-                ans, col, aggr = selectKeyword(schemaDict)
-            else:
-                ans = pd.read_csv(schemaDict.get('table_name')[0] + ".csv")
-            if schemaDict.get('group_by') is not None:
-                ans = groupBy(schemaDict, ans)
-            if aggr is not None:
-                ans = selectAggr(col, ans, aggr)
-            if schemaDict.get('order_by') is not None:
-                ans = orderBy(schemaDict, ans)
-            print(ans)
-        
-        elif keyword == "update": #where
-            updateKeyword(schemaDict)
-        
-        elif keyword == "insert":
-            table_name = schemaDict['table_name']
-            treePtr = tableTreeRelation[table_name]
-            insert_table(schemaDict, treePtr)
-        
-        elif keyword == "delete": #where
-            tableName = schemaDict.get('table_name')
-            treePtr = tableTreeRelation[tableName]
-            deleteKeyword(schemaDict)
 
 
 def orderBy(schemaDict, ans):
