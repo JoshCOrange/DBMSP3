@@ -40,6 +40,8 @@ sqlS8 = '''SELECT COUNT(CustomerID), Country
             FROM Customers
             GROUP BY Country
             HAVING COUNT(CustomerID) BETWEEN 0 and 5;'''
+sql_d = "DELETE FROM r_1 WHERE k > 10 and k < 100"
+sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]

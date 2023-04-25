@@ -1,4 +1,6 @@
 from parser import *
+import time
+from execution import *
 
 def table_1():
     sql_CT = '''CREATE TABLE Relation_1(
@@ -6,7 +8,7 @@ def table_1():
     val integer
     Primary Key (k)
     )'''
-    readQuery([sql_CT])
+    main([sql_CT])
     for i in range(1000):
         sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
         readQuery([sql_I])
@@ -19,7 +21,7 @@ def table_2():
     )'''
     readQuery([sql_CT])
     for i in range(1000):
-        sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", 1)"
+        sql_I = "INSERT INTO Relation_2 (k, val) VALUES (" + str(i+1) +", 1)"
         readQuery([sql_I])
 
 def table_3():
@@ -30,7 +32,7 @@ def table_3():
     )'''
     readQuery([sql_CT])
     for i in range(10000):
-        sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
+        sql_I = "INSERT INTO Relation_3 (k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
         readQuery([sql_I])
     
 def table_4():
@@ -41,7 +43,7 @@ def table_4():
     )'''
     readQuery([sql_CT])
     for i in range(10000):
-        sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", 1)"
+        sql_I = "INSERT INTO Relation_4 (k, val) VALUES (" + str(i+1) +", 1)"
         readQuery([sql_I])
 
 def table_5():
@@ -52,7 +54,7 @@ def table_5():
     )'''
     readQuery([sql_CT])
     for i in range(100000):
-        sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
+        sql_I = "INSERT INTO Relation_5 (k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
         readQuery([sql_I])
 
 
@@ -64,23 +66,47 @@ def table_6():
     )'''
     readQuery([sql_CT])
     for i in range(100000):
-        sql_I = "INSERT INTO Relation_1 (k, val) VALUES (" + str(i+1) +", 1)"
+        sql_I = "INSERT INTO Relation_6 (k, val) VALUES (" + str(i+1) +", 1)"
         readQuery([sql_I])
 
 
 
 
 def all_table ():
+    start = time.time()
+    
     table_1()
+    print("1 done")
+    end1 = time.time()
+    print(end1 - start)
+    
     table_2()
+    print("2 done")
+    end2 = time.time()
+    print(end2 - end1)
+    
     table_3()
+    print("3 done")
+    end3 = time.time()
+    print(end3- end2)
+    
     table_4()
+    print("4 done")
+    end4 = time.time()
+    print(end4 - end3)
+    
     table_5()
+    print("5 done")
+    end5 = time.time()
+    print(end5 - end4)
+    
     table_6()
+    print("6 done")
+    end6 = time.time()
+    print(end6 - end5)
+
+all_table()
 
 
-#all_table()
 
-sql_d = "DELETE FROM r_1 WHERE k > 10 and k < 100"
-sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
-print(readQuery([sql_u]))
+#print(readQuery([sql_u]))
