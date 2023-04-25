@@ -85,25 +85,25 @@ def all_table ():
     end2 = time.time()
     print(end2 - end1)
     
-    '''newTree, table = table_3()
+    '''newTree, tableName = table_3()
     tableTreeRelation[tableName] = newTree
     print("3 done")
     end3 = time.time()
     print(end3- end2)
     
-    newTree, table = table_4()
+    newTree, tableName = table_4()
     tableTreeRelation[tableName] = newTree
     print("4 done")
     end4 = time.time()
     print(end4 - end3)
     
-    newTree, table = table_5()
+    newTree, tableName = table_5()
     tableTreeRelation[tableName] = newTree
     print("5 done")
     end5 = time.time()
     print(end5 - end4)
     
-    newTree, table = table_6()
+    newTree, tableName = table_6()
     tableTreeRelation[tableName] = newTree
     print("6 done")
     end6 = time.time()
