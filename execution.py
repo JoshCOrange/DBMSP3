@@ -111,7 +111,12 @@ def selectKeyword(schemaDict):
         all_rows.pop(0)
         all_rows.insert(0, new_rows)
     #ans.loc[:,return_columns]
-    print(all_rows)
+    #ans = all_rows[0]
+    if column_names[0] == "*":
+        ans = all_rows[0]
+    else:
+        ans = all_rows[0].loc[:,column_names]
+    print(ans)
    
 
     #print("hello")
