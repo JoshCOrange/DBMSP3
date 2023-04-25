@@ -58,7 +58,6 @@ def main():
             if aggr is not None:
                 ans = selectAggr(col, ans, aggr)
             if schemaDict.get('order_by') is not None:
-                print(here)
                 ans = orderBy(schemaDict, ans)
             print(ans)
         
@@ -77,14 +76,14 @@ def main():
 
 
 def orderBy(schemaDict, ans):
-    print("order_by")
-    column_order = schemaDict['oreder_by']
-    for k, v in column_order.items():
-        
-        if v == "DESC":
-            ans.sort_values(by=[k], ascending=False)
+    column_order = schemaDict['order_by']
+    columns = column_order['col_orders']
+    orders = column_order['orders']
+    for i in range(len(orders)):
+        if orders[i] == "DESC":
+            ans = ans.sort_values(by=[columns[i]], ascending=False)
         else:
-            ans.sort_values(by=[k])
+            ans = ans.sort_values(by=[columns[i]])
     return ans
 
 
