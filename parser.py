@@ -4,15 +4,11 @@ import re
 import copy
 
 
-sqlCT = '''CREATE TABLE public.actor (
-    actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
-    first_name VARCHAR(45) NOT NULL,
-    last_name character varying(45) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL,
-    FOREIGN KEY (last_update) REFERENCES Weeks (time) ON DELETE CASCADE,
-    FOREIGN KEY (first_name) REFERENCES Names (first_name) ON DELETE SET NULL,
-    Primary Key (actor_id)
-    );'''
+sqlCT = '''CREATE TABLE Relation_1(
+    k integer,
+    val integer,
+    Primary Key (k)
+    )'''
 sqlCI = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
 sqlDT = "DROP TABLE table_1"
 sqlDI = "DROP INDEX index_1 ON table_1"
@@ -45,7 +41,7 @@ sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-qs = [sqlS5]
+qs = [sqlCT]
 
 
 
@@ -91,9 +87,8 @@ def readQuery(qs):
                     if token.value.startswith("WHERE"): flag = 0
                 schemaDict = deleteParse(flag, tokens)
                 execution = ('delete', schemaDict)
-        
-        return execution
         #print(schemaDict)
+        return execution
         #print ("---"*20)
 
 
@@ -153,7 +148,16 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
         
 
 def createParse(flag, tokens): #Design Choice, stop user from using () in naming anything
-    schemaDict = {}
+    schemaDict = {
+            'table_name': "", 
+            'primary_key':[],
+            'column_names': [], 
+            'column_types': [],
+            "foreign_keys" : [],
+            "foreign_tables" : [],
+            "foreign_columns" : [],
+            "foreign_deletes" : []
+                        }
     for i, token in enumerate(tokens):
         if flag == 1 and token.value.startswith("("):
             column_names = []
