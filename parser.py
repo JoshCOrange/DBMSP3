@@ -318,14 +318,14 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
-            columns = [''.join(c for c in s if c not in "!\"#$%&'()+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
+            columns = [''.join(c for c in s if c not in "!\"#$%&'+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
             #String.punctuation is not used because we want to preserve * in select statment
             schemaDict.update({"columns": columns})
         
         if token.match(sqlparse.tokens.Keyword, 'FROM'): #if at end of select or next token is 'WHERE'
             table_names = tokens[i+1].value.split(" ")
-            tables_names = [''.join(c for c in s if c not in string.punctuation) for s in table_names if s]
-            schemaDict.update({"table": tables_names}) 
+            #tables_names = [''.join(c for c in s if c not in string.punctuation) for s in table_names if s]
+            schemaDict.update({"table": table_names}) 
         
         if token.value.startswith("WHERE"):
             clause = str(tokens[i])

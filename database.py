@@ -330,7 +330,7 @@ def search_table(Dict, tree):
                     tmp = df.iloc[row_number].to_dict()
                     tmp = pd.DataFrame.from_dict(tmp, orient="index").T
                     ans = tmp
-            elif search_conditions[1] == "IN":
+            elif search_conditions[1].upper() == "IN":
                 flag = True
                 tmp_value = search_conditions[2]
                 tmp_value = tmp_value[1:-1]
@@ -367,7 +367,7 @@ def search_table(Dict, tree):
                 else:
                     ans = result
                     #print(ans)
-            elif search_conditions[1] == "BETWEEN":
+            elif search_conditions[1].upper()  == "BETWEEN":
                 flag = True
                 search_value_1 = int(search_conditions[2])
                 search_value_2 = int(search_conditions[4])
@@ -400,9 +400,9 @@ def search_table(Dict, tree):
                         return ans
                     return ans.loc[:,return_columns]
     
-    if search_conditions[1] == "LIKE" or search_conditions[1] == "IN" or search_conditions[1] == ">" or search_conditions[1] == "<" or search_conditions[1] == "=" or search_conditions[1] == ">=" or search_conditions[1] == "<=" or search_conditions[1] == "!=":
+    if search_conditions[1].upper()  == "LIKE" or search_conditions[1].upper()  == "IN" or search_conditions[1] == ">" or search_conditions[1] == "<" or search_conditions[1] == "=" or search_conditions[1] == ">=" or search_conditions[1] == "<=" or search_conditions[1] == "!=":
         search_value = search_conditions[2]
-    elif search_conditions[1] == "BETWEEN":
+    elif search_conditions[1].upper()  == "BETWEEN":
         #print("kkkkkkkkkkk")
         search_value_1 = int(search_conditions[2])
         search_value_2 = int(search_conditions[4])
@@ -411,10 +411,10 @@ def search_table(Dict, tree):
     with open(f"{Dict['table_name']}.csv", 'r', newline='') as f:
         #print("kkkkkkkkkkk")
         #根據condition_column,找到有那個值(ex:w%)的那個row,取出那整個row,再根據column_name看要回傳哪些對應的column的值傳回去
-        if search_conditions[1] == "LIKE":   #must be string
+        if search_conditions[1].upper()  == "LIKE":   #must be string
             search_value = search_value[1:-1]   #'w%' --> w%
             ans = Like_check(df, search_column_name, search_value)
-        elif search_conditions[1] == "BETWEEN":
+        elif search_conditions[1].upper()  == "BETWEEN":
             #print("kkkkkkkkkkk")
             result = []
             for i in range(len(df[search_column_name])):
@@ -423,7 +423,7 @@ def search_table(Dict, tree):
                     result.append(df.iloc[i])
             #print(result)
             ans = pd.DataFrame(result)
-        elif search_conditions[1] == "IN":   #may be string
+        elif search_conditions[1].upper()  == "IN":   #may be string
             search_value = search_value[1:-1]
             target_values = search_value.split(',')
             #print(target_values)
