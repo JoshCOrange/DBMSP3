@@ -4,6 +4,10 @@ from cannedTables import *
 
 tableTreeRelation = {}
 
+test_CT = "CREATE TABLE Relation(k integer, val integer,val_2 string Primary Key (k))"
+test_Insert = "INSERT INTO Relation(k, val, val_2) VALUES (1, 2, SSS)"
+test_DropT = "Drop Table Relation"
+
 def main():
     #list of tuples [(tableName, tree), (tableName, tree), ... ]
     
@@ -12,8 +16,10 @@ def main():
     query = "hi"
     while query != "exit":
         query = input("SQL> ")
+        if query == "exit":
+            break
         queryList = []
-        queryList.append[query]
+        queryList.append(query)
         myTuple = readQuery(queryList)
         keyword = myTuple[0]
         schemaDict = myTuple[1]
@@ -32,7 +38,9 @@ def main():
         elif keyword == "update": #where
             updateKeyword(schemaDict)
         elif keyword == "insert":
-            insert_table(schemaDict, TREE)
+            table_name = schemaDict['table']
+            treePtr = tableTreeRelation[table_name]
+            insert_table(schemaDict, treePtr)
         elif keyword == "delete": #where
             tableName = schemaDict.get('table_name')
             treePtr = tableTreeRelation[tableName]
@@ -71,18 +79,17 @@ def all_table ():
     end1 = time.time()
     print(end1 - start)
     
-    newTree, table = table_2()
+    newTree, tableName = table_2()
     tableTreeRelation[tableName] = newTree
     print("2 done")
     end2 = time.time()
     print(end2 - end1)
     
-    newTree, table = table_3()
+    '''newTree, table = table_3()
     tableTreeRelation[tableName] = newTree
     print("3 done")
     end3 = time.time()
     print(end3- end2)
-    exit()
     
     newTree, table = table_4()
     tableTreeRelation[tableName] = newTree
@@ -100,7 +107,7 @@ def all_table ():
     tableTreeRelation[tableName] = newTree
     print("6 done")
     end6 = time.time()
-    print(end6 - end5)
+    print(end6 - end5)'''
 
 
 
@@ -109,4 +116,6 @@ if __name__ == '__main__':
     pd.set_option("display.max_colwidth", 10000)
     create_internal_table()
     all_table()
+    for i in tableTreeRelation.items():
+        print(i)
     main()
