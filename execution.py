@@ -1,6 +1,7 @@
 from database import *
 from parser import *
 from cannedTables import *
+import os 
 
 tableTreeRelation = {}
 
@@ -15,9 +16,11 @@ def main():
     #create all the required relations via parser
     query = "hi"
     while query != "exit":
-        query = input("SQL> ")
+        query = input("SQL> ").strip()
         if query == "exit":
             break
+        if query == "":
+            continue
         queryList = []
         queryList.append(query)
         myTuple = readQuery(queryList)
@@ -27,24 +30,84 @@ def main():
         #where does search go here
         if keyword == "create table":
             newTree = create_table(schemaDict)
-            tableName = schemaDict.get('table_name')
+            table_name = schemaDict.get('table_name')
             tableTreeRelation[table_name] = newTree
+        
         elif keyword == "drop table":
             table_name = schemaDict.get('table_name')
             treePtr = tableTreeRelation[table_name]
             drop_table(schemaDict, treePtr)
+            os.remove(table_name + ".csv")
+            df = pd.read_csv("internal_table.csv")
+            # Set the index of the DataFrame to the country name
+            with open("internal_table.csv", 'r', newline='') as f: 
+                df = df.set_index("table_name")
+                new_df= df.drop(table_name)
+                new_df = new_df.reset_index()
+                new_df.to_csv("internal_table.csv", index=False)
+
         elif keyword == "select": #where
-            selectKeyword(schemaDict)
+            if len(schemaDict['columns']) == 1:
+                col, aggr = parseAggregation(schemaDict['columns'][0])
+            if schemaDict.get('where') is not None:
+                ans, col, aggr = selectKeyword(schemaDict)
+            else:
+                ans = pd.read_csv(schemaDict.get('table_name')[0] + ".csv")
+            if schemaDict.get('group_by') is not None:
+                ans = groupBy(schemaDict, ans)
+            if aggr is not None:
+                ans = selectAggr(col, ans, aggr)
+            if schemaDict.get('order_by') is not None:
+                print(here)
+                ans = orderBy(schemaDict, ans)
+            print(ans)
+        
         elif keyword == "update": #where
             updateKeyword(schemaDict)
+        
         elif keyword == "insert":
-            table_name = schemaDict['table']
+            table_name = schemaDict['table_name']
             treePtr = tableTreeRelation[table_name]
             insert_table(schemaDict, treePtr)
+        
         elif keyword == "delete": #where
-            tableName = schemaDict.get('table')
+            tableName = schemaDict.get('table_name')
             treePtr = tableTreeRelation[tableName]
             deleteKeyword(schemaDict)
+
+
+def orderBy(schemaDict, ans):
+    print("order_by")
+    column_order = schemaDict['oreder_by']
+    for k, v in column_order.items():
+        
+        if v == "DESC":
+            ans.sort_values(by=[k], ascending=False)
+        else:
+            ans.sort_values(by=[k])
+    return ans
+
+
+
+def selectAggr(col_name, ans, aggr):
+    result = None
+    if aggr.upper() == "MIN":
+        result = min(ans[col_name].to_list())
+    if aggr.upper() == "MAX":
+        result = max(ans[col_name].to_list())
+    if aggr.upper() == "AVG":
+        result = sum(ans[col_name].to_list()) / len(ans[col_name].to_list())
+    if aggr.upper() == "SUM":
+        result = sum(ans[col_name].to_list())
+    if aggr.upper() == "COUNT":
+        result = len(ans[col_name].to_list())
+    return result
+
+def groupBy(schemaDict, df):
+    group_col = schemaDict["group_by"]
+    df.groupby([group_col[0]])
+    return df
+    
 
 #ans.loc[:,return_columns]
 def orConjunctions (df_1, df_2):
@@ -74,6 +137,7 @@ def parseAggregation(column): #Mainly to parse out the column names for select t
 
 
 def selectKeyword(schemaDict):
+    #if schemaDict.get('where') is None:
     conditions =  schemaDict['where']['conditions']
     conjunctions = schemaDict['where']['conjunctions']
     table_name = schemaDict.get('table_name')[0]
@@ -107,7 +171,6 @@ def selectKeyword(schemaDict):
             if conjunction.upper() == "AND":
                 all_rows.pop(0)
             break
-
         if conjunction.upper() == "OR":
             if all_rows[0] is None:
                 all_rows.pop(0)
@@ -127,18 +190,20 @@ def selectKeyword(schemaDict):
         all_rows.insert(0, new_rows)
     #ans.loc[:,return_columns]
     #ans = all_rows[0]
-    if column_names[0] == "*":
+    if len(all_rows) == 0:
+        ans = None
+    elif column_names[0] == "*":
         ans = all_rows[0]
     else:
         ans = all_rows[0].loc[:,column_names]
-    print(ans)
-   
+    
+    return ans, col, aggr
 
     #print("hello")
 
 
 def updateKeyword(schemaDict):
-    print("hello")
+    #print("hello")
     update_tree(TREE, schemaDict, KEY)
 
 def deleteKeyword(schemaDict, treePtr):
@@ -159,43 +224,46 @@ def deleteKeyword(schemaDict, treePtr):
 
 
 def all_table ():
+    newTree, tableName = table_0()
+    tableTreeRelation[tableName] = newTree
+    print("0 done")
     start = time.time()
     #print(1)
     newTree, tableName = table_1()
     tableTreeRelation[tableName] = newTree
     print("1 done")
     end1 = time.time()
-    print(end1 - start)
+    print("Time: ", end1 - start)
     '''
     newTree, tableName = table_2()
     tableTreeRelation[tableName] = newTree
     print("2 done")
     end2 = time.time()
-    print(end2 - end1)
+    print("Time: ", end2 - end1)
     
     newTree, tableName = table_3()
     tableTreeRelation[tableName] = newTree
     print("3 done")
     end3 = time.time()
-    print(end3- end2)
+    print("Time: ", end3 - end2)
     
     newTree, tableName = table_4()
     tableTreeRelation[tableName] = newTree
     print("4 done")
     end4 = time.time()
-    print(end4 - end3)
+    print("Time: ", end4 - end3)
     
     newTree, tableName = table_5()
     tableTreeRelation[tableName] = newTree
     print("5 done")
     end5 = time.time()
-    print(end5 - end4)
+    print("Time: ", end5 - end4)
     
     newTree, tableName = table_6()
     tableTreeRelation[tableName] = newTree
     print("6 done")
     end6 = time.time()
-    print(end6 - end5)'''
+    print("Time: ", end6 - end5)'''
 
 
 

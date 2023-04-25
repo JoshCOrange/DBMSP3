@@ -1,6 +1,25 @@
 from parser import *
 import time
 from execution import *
+def table_0():
+    sql_CT = '''CREATE TABLE Relation(k integer, val integer,val_2 string, Primary Key (k))'''
+    re_tuple = readQuery([sql_CT])
+    schemaDict = re_tuple[1]
+    newTree = create_table(schemaDict)
+    tableName = schemaDict.get('table_name')
+    #for i in range(1000):
+    sql_I = "INSERT INTO Relation(k, val, val_2) VALUES (1, 2, SSS)"
+    re_tuple = readQuery([sql_I])
+    schemaDict = re_tuple[1]
+    insert_table(schemaDict, newTree)
+
+    sql_I = "INSERT INTO Relation(k, val, val_2) VALUES (2, 2, SSS)"
+    re_tuple = readQuery([sql_I])
+    schemaDict = re_tuple[1]
+    insert_table(schemaDict, newTree)
+
+    return newTree, tableName
+
 
 def table_1():
     sql_CT = '''CREATE TABLE Relation_1(
