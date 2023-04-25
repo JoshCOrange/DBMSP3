@@ -46,8 +46,21 @@ def main():
             treePtr = tableTreeRelation[tableName]
             deleteKeyword(schemaDict)
 
+#ans.loc[:,return_columns]
+def orConjunctions (df_1, df_2):
+    new_df = pd.concat([df_1,df_2]).drop_duplicates().reset_index(drop=True)
+    return new_df
+
+def andConjunctions (df_1, df_2):
+    new_df = pd.merge(df_1, df_2).reset_index(drop=True)
+    return new_df
+
+
+
+
 def selectKeyword(schemaDict):
     conditions =  schemaDict['where']['conditions']
+    conjunctions = schemaDict['where']['conjunctions']
     table_name = schemaDict.get('table')[0]
     treePtr = tableTreeRelation[table_name]
     #Dict = {
@@ -66,16 +79,40 @@ def selectKeyword(schemaDict):
         'column_name': column_names, #TODO: Need to deal with aggrigation
         'where': {'condition': ""}
         }
-    rows_one_condition = pd.DataFrame()
-    all_rows = pd.DataFrame()
+    all_rows = []
     #search_table(Dict, tree)
-    for i in treePtr.keys():
-        print(type(i))
-        break
+
     for condition in conditions:
         whereDict['where'].update({'condition': [condition]})
         #print(whereDict['where']['condition'])
-        print (search_table(whereDict, treePtr))
+        all_rows.append(search_table(whereDict, treePtr))
+    #print(all_rows)
+    for i, conjunction in enumerate(conjunctions):
+        if len(all_rows) == 1:
+            if conjunction.upper() == "AND":
+                all_rows.pop(0)
+            break
+
+        if conjunction.upper() == "OR":
+            if all_rows[0] is None:
+                all_rows.pop(0)
+                continue
+            if all_rows[1] is None:
+                all_rows.pop(1)
+                continue
+            new_rows = orConjunctions (all_rows[0],all_rows[1])
+        if conjunction.upper() == "AND":
+            if all_rows[0] is None or all_rows[1] is None:
+                all_rows.pop(0)
+                all_rows.pop(0)
+                continue
+            new_rows = andConjunctions (all_rows[0],all_rows[1])
+        all_rows.pop(0)
+        all_rows.pop(0)
+        all_rows.insert(0, new_rows)
+    #ans.loc[:,return_columns]
+    print(all_rows)
+   
 
     #print("hello")
 def parseAggregation(column): #Mainly to parse out the column names for select that's within aggrigation.  
@@ -87,8 +124,8 @@ def parseAggregation(column): #Mainly to parse out the column names for select t
             start = i+1
             column_name = column[start:-1]
             aggregation = column[:i]
-    print(column_name)
-    print(aggregation)
+    #print(column_name)
+    #print(aggregation)
     
     if aggregation is None: return column, None
     return column_name, aggregation

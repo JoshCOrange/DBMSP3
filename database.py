@@ -396,9 +396,11 @@ def search_table(Dict, tree):
                 if ans.empty:   #no row match this condition
                     return None
                 else:
+                    return ans
                     if return_columns[0] == "*":   #need every column
                         return ans
                     return ans.loc[:,return_columns]
+                   
     
     if search_conditions[1].upper()  == "LIKE" or search_conditions[1].upper()  == "IN" or search_conditions[1] == ">" or search_conditions[1] == "<" or search_conditions[1] == "=" or search_conditions[1] == ">=" or search_conditions[1] == "<=" or search_conditions[1] == "!=":
         search_value = search_conditions[2]
@@ -547,6 +549,7 @@ def search_table(Dict, tree):
     if ans.empty:   #no row match this condition
         return None
     else:
+        return ans
         if return_columns[0] == "*":   #need every column
             return ans
         return ans.loc[:,return_columns]

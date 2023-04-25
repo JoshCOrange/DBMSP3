@@ -1,0 +1,17 @@
+CREATE TABLE Relation(k integer, val integer,val_2 string, Primary Key (k))
+
+INSERT INTO Relation(k, val, val_2) VALUES (1, 2, SSS)
+
+Drop Table Relation
+
+Drop Table Relation_1
+
+SELECT * FROM Relation_1 WHERE k = 1
+
+SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 and k = 100
+
+SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 and k = 100
+
+SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 
+
+SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 10
