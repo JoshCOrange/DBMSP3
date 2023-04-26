@@ -41,7 +41,8 @@ sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-qs = [sqlCT]
+#qs = [sql_u]
+#print(readQuery(qs))
 
 
 
@@ -213,7 +214,7 @@ def createParse(flag, tokens): #Design Choice, stop user from using () in naming
             column_names = []
             schemaDict.update({"index_name": tokens[i-1].value})
             tableColumns = tokens[i+1].value.split(" ")
-            tableColumns = [''.join(c for c in s if c not in string.punctuation) for s in tableColumns if s]
+            #tableColumns = [''.join(c for c in s if c not in string.punctuation) for s in tableColumns if s]
             #tableColumns = [s for s in tableColumns if s]
             #print (f"table: {tableColumns[0]}")
             schemaDict.update({"table_name": tableColumns[0]})
@@ -240,7 +241,7 @@ def dropParse(flag, tokens):
     return schemaDict
 
 def updateParse(tokens): #assumes values are encolsed in single quotes
-    tableName = tokens[2].value
+    tableName = tokens[1].value
     columns = []
     values = []
     setClause = []
@@ -318,7 +319,7 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
-            columns = [''.join(c for c in s if c not in "!\"#$%&'+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
+            #columns = [''.join(c for c in s if c not in "!\"#$%&'+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
             #String.punctuation is not used because we want to preserve * in select statment
             schemaDict.update({"columns": columns})
         
@@ -327,7 +328,7 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             #tables_names = [''.join(c for c in s if c not in string.punctuation) for s in table_names if s]
             schemaDict.update({"table_name": table_names}) 
         
-        if token.value.startswith("WHERE"):
+        if token.value.upper().startswith("WHERE"):
             clause = str(tokens[i])
             parsedWhere = whereParse(clause)
             schemaDict.update({"where": parsedWhere})
@@ -356,13 +357,9 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
                     orders.append(tmp[1].upper())
                 else:
                     orders.append("ASC")
-            schemaDict.update({"oreder_by": {"col_orders": col_orders,"orders": orders }})
+            schemaDict.update({"order_by": {"col_orders": col_orders,"orders": orders }})
 
 
     #print(schemaDict)
     return schemaDict
 
-
-
-
-readQuery(qs)
