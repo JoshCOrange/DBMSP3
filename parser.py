@@ -419,4 +419,4 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             schemaDict.update({"having":parsedHaving}) 
     #print(schemaDict)
     return schemaDict
-print(readQuery(qs))
+#print(readQuery(qs))
