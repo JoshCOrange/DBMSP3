@@ -504,18 +504,24 @@ def deleteKeyword(schemaDict):
     schema = readDict(specific_row.loc[:,"schemaDict"].to_string(index=False))
     primary_key_column_name = schema['primary_key']   #since we only have one primary key
     primary_keys = all_rows[0].loc[:,primary_key_column_name].to_list()
+
+
+    
+    
     for key in primary_keys:
+        df = pd.read_csv(f"{schemaDict['table_name']}.csv")
+        # Set the index of the DataFrame to the country name
+        with open(f"{schemaDict['table_name']}.csv", 'r', newline='') as f: 
+            df = df.set_index(primary_key_column_name)
+            new_df = df.drop(key)
+            new_df = new_df.reset_index()
+            new_df.to_csv(f"{schemaDict['table_name']}.csv", index=False)
         #print(key)
         delete_index_tree(treePtr, key, table_name)
-    for key in treePtr.keys():
+    '''for key in treePtr.keys():
         print(key)
+        '''
     
-
-
-#TODO
-#Catch on misspelling on database accessing
-#Join/Query optimization
-#AND and OR
 
 def thetaJoin(df_1, df_2, col_1, col_2, condition):
     list1 = df_1.loc[:,[col_1]].to_list()
@@ -543,13 +549,13 @@ def all_table ():
     print("1 done")
     end1 = time.time()
     print("Time: ", end1 - start)
-
+    '''
     newTree, tableName = table_2()
     tableTreeRelation[tableName] = newTree
     print("2 done")
     end2 = time.time()
     print("Time: ", end2 - end1)
-    '''
+    
     newTree, tableName = table_3()
     tableTreeRelation[tableName] = newTree
     print("3 done")
