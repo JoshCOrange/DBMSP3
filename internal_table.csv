@@ -1,0 +1,4 @@
+table_name,schemaDict,length,foreign_start,foreign_end
+Relation,"{'table_name': 'Relation', 'primary_key': 'k', 'column_names': ['k', 'val', 'val_2'], 'column_types': ['integer', 'integer', 'string'], 'foreign_keys': [], 'foreign_tables': [], 'foreign_columns': [], 'foreign_deletes': []}",2,{},{}
+Relation_1,"{'table_name': 'Relation_1', 'primary_key': 'k', 'column_names': ['k', 'val'], 'column_types': ['integer', 'integer'], 'foreign_keys': [], 'foreign_tables': [], 'foreign_columns': [], 'foreign_deletes': []}",1000,{},{}
+ABC,"{'table_name': 'ABC', 'primary_key': 'Name', 'column_names': ['Team#', 'Name', 'Age', 'Room#'], 'column_types': ['integer', 'string', 'integer', 'integer'], 'foreign_keys': [], 'foreign_tables': [], 'foreign_columns': [], 'foreign_deletes': []}",0,{},{}
