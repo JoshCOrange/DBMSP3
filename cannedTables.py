@@ -31,8 +31,7 @@ def table_1():
     schemaDict = re_tuple[1]
     newTree = create_table(schemaDict)
     tableName = schemaDict.get('table_name')
-    #for i in range(1000):
-    for i in range(100):
+    for i in range(1000):
         sql_I = "INSERT INTO Relation_1(k, val) VALUES (" + str(i+1) +", " + str(i+1) + ")"
         re_tuple = readQuery([sql_I])
         schemaDict = re_tuple[1]

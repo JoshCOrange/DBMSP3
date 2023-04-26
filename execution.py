@@ -58,9 +58,13 @@ def main():
                 if schemaDict.get('group_by') is not None:
                     ans = groupBy(schemaDict, ans)
                 if aggr is not None:
-                    ans = selectAggr(col, ans, aggr)
+                    ans = selectAggr(col, ans, aggr, schemaDict)
+                    if schemaDict.get('having') is not None:
+                        ans = having(schemaDict, ans, col)
                 if schemaDict.get('order_by') is not None:
                     ans = orderBy(schemaDict, ans)
+                if schemaDict.get('join') is not None:
+                    ans = joinKeyword(schemaDict, ans)
                 print(ans)
             
             elif keyword == "update": #where
@@ -81,9 +85,185 @@ def main():
             print(traceback.format_exc())
             continue
 
-def having (schemaDict, ans):
-    search_table_having(Dict)
-    pass
+def joinKeyword(schemaDict, ans):
+    #table_one = schemaDict["tableOne"]
+    table_two = schemaDict['join']["tableTwo"]
+    #tableOneFile = table_one + ".csv"
+    tableTwoFile = table_two + ".csv"
+    #dfOne = pd.read_csv(tableOneFile)
+    dfOne = ans
+    dfTwo = pd.read_csv(tableTwoFile)
+    
+
+    headings = list(dfOne.columns)
+    headings.extend(list(dfTwo.columns))
+
+    dfMerged = pd.DataFrame(columns=headings)
+
+    difference = abs(len(dfOne) - len(dfTwo))
+    locNum = 0
+    if difference > 500:
+        #Nested
+        for index, row in dfOne.iterrows():
+            valOne = row[schemaDict['join']["columnOne"]]
+            for indexTwo, rowTwo in dfTwo.iterrows():
+                valTwo = rowTwo[schemaDict['join']["columnTwo"]]
+                if schemaDict['join']["operator"] == "=":
+                    if valOne == valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+                if schemaDict['join']["operator"] == ">":
+                    if valOne > valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+                if schemaDict['join']["operator"] == "<":
+                    if valOne < valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+                if schemaDict['join']["operator"] == ">=":
+                    if valOne >= valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+                if schemaDict['join']["operator"] == "<=":
+                    if valOne <= valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+                if schemaDict['join']["operator"] == "!=":
+                    if valOne != valTwo:
+                        newRow = list(row)
+                        newRow.extend(list(rowTwo))
+                        dfMerged.loc[locNum] = newRow
+                        locNum += 1
+    else:
+        #merge
+        i = 0
+        j = 0
+            
+        while i < len(dfOne) and j < len(dfTwo):
+            valOne = dfOne.loc[i, schemaDict['join']["columnOne"]]
+            valTwo = dfTwo.loc[j, schemaDict['join']["columnTwo"]]
+            if schemaDict['join']["operator"] == "=":
+                if valOne == valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if schemaDict['join']["operator"] == ">":
+                if valOne > valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if schemaDict['join']["operator"] == "<":
+                if valOne < valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if schemaDict['join']["operator"] == "!=":
+                if valOne != valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if schemaDict['join']["operator"] == "<=":
+                if valOne <= valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if schemaDict['join']["operator"] == ">=":
+                if valOne >= valTwo:
+                    newRow = list(dfOne.iloc[i])
+                    newRow.extend(list(dfTwo.iloc[j]))
+                    dfMerged.loc[locNum] = newRow
+                    locNum += 1
+                    j += 1
+                else:
+                    i += 1
+            if (j == len(dfTwo)):
+                j = 0
+                i += 1
+
+    #print(dfMerged)
+    return dfMerged
+
+def having(schemaDict, ans, col):
+    #print(ans)
+    conditions =  schemaDict['having']['conditions']
+    conjunctions = schemaDict['having']['conjunctions']
+    column_names = schemaDict['columns']
+    havingDict = {
+        "df" : ans,
+        'column_name': schemaDict['columns'],
+        'having': {}
+    }
+    all_rows = []
+    for condition in conditions:
+        havingDict['having'].update({'condition': [condition]})
+        #print(whereDict['where']['condition'])
+        all_rows.append(search_table_having(havingDict))
+    
+    #print(all_rows)
+    for i, conjunction in enumerate(conjunctions):
+        if len(all_rows) == 1:
+            if conjunction.upper() == "AND":
+                all_rows.pop(0)
+            break
+        if conjunction.upper() == "OR":
+            if all_rows[0] is None:
+                all_rows.pop(0)
+                continue
+            if all_rows[1] is None:
+                all_rows.pop(1)
+                continue
+            new_rows = orConjunctions (all_rows[0],all_rows[1])
+        if conjunction.upper() == "AND":
+            if all_rows[0] is None or all_rows[1] is None:
+                all_rows.pop(0)
+                all_rows.pop(0)
+                continue
+            new_rows = andConjunctions (all_rows[0],all_rows[1])
+        all_rows.pop(0)
+        all_rows.pop(0)
+        all_rows.insert(0, new_rows)
+    #ans.loc[:,return_columns]
+    #ans = all_rows[0]
+    if len(all_rows) == 0 or all_rows[0] is None:
+        ans = None
+    elif column_names[0] == "*":
+        ans = all_rows[0]
+    else:
+        ans = all_rows[0].loc[:,column_names]
+    
+    return ans
+    
+    
 
 
 def orderBy(schemaDict, ans):
@@ -98,7 +278,7 @@ def orderBy(schemaDict, ans):
     return ans
 
 
-def selectAggr(col_name, ans, aggr):
+def selectAggr(col_name, ans, aggr, schemaDict):
     result = None
     if aggr.upper() == "MIN":
         result = min(ans[col_name].to_list())
@@ -110,7 +290,8 @@ def selectAggr(col_name, ans, aggr):
         result = sum(ans[col_name].to_list())
     if aggr.upper() == "COUNT":
         result = len(ans[col_name].to_list())
-    return result
+    new_df = pd.DataFrame([result], columns=schemaDict['columns'])
+    return new_df
 
 def groupBy(schemaDict, df):
     group_col = schemaDict["group_by"]
@@ -199,7 +380,7 @@ def selectKeyword(schemaDict):
         all_rows.insert(0, new_rows)
     #ans.loc[:,return_columns]
     #ans = all_rows[0]
-    if len(all_rows) == 0:
+    if len(all_rows) == 0 or all_rows[0] is None:
         ans = None
     elif column_names[0] == "*":
         ans = all_rows[0]
@@ -362,13 +543,13 @@ def all_table ():
     print("1 done")
     end1 = time.time()
     print("Time: ", end1 - start)
-    '''
+
     newTree, tableName = table_2()
     tableTreeRelation[tableName] = newTree
     print("2 done")
     end2 = time.time()
     print("Time: ", end2 - end1)
-    
+    '''
     newTree, tableName = table_3()
     tableTreeRelation[tableName] = newTree
     print("3 done")

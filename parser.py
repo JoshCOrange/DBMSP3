@@ -32,17 +32,23 @@ sqlS7 = '''SELECT col_1, col_2, col_3, col_4 FROM table_1
             GROUP BY col_2, col_4
             ORDER BY col_1 DESC, col_3 ASC'''
 
-sqlS8 = '''SELECT COUNT(CustomerID), Country
+sqlS8 = '''SELECT COUNT(CustomerID)
             FROM Customers
-            GROUP BY Country
             HAVING COUNT(CustomerID) BETWEEN 0 and 5;'''
+sqlS9 = '''SELECT COUNT(CustomerID)
+            FROM Customers
+            HAVING COUNT(CustomerID) BETWEEN 0 and 5
+            ORDER BY COUNT(CustomerID)'''
 sql_d = "DELETE FROM r_1 WHERE k > 10 and k < 100"
 sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
-sql_j = "SELECT k FROM relation_1  JOIN relation_2 ON k = relation_2_column"
+sql_j1 = "SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k = k"
+sql_j2 = "SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k > k"
+sql_j3 = "SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k != k"
+sql_j4 = "SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k <= k"
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-qs = [sql_j]
+qs = [sql_j4]
 
 
 
@@ -51,9 +57,15 @@ def readQuery(qs):
     #sql = "DROP TABLE test"
     schemaDict = {}
     execution = ()
+    join = None
     for sql in qs:
         tiflag = 0 # 1 for table, -1 for index, 0 for other
-        parsed = sqlparse.parse(sql)
+        if "JOIN" in sql:
+            tmp = sql.split("JOIN")
+            parsed = sqlparse.parse(tmp[0])
+            join = sqlparse.parse(tmp[1])
+        else:
+            parsed = sqlparse.parse(sql)
         for stmt in parsed:
             tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
             # Is it a create statements ?
@@ -75,6 +87,12 @@ def readQuery(qs):
                     execution = ('drop index', schemaDict)
             if tokens[0].match(sqlparse.tokens.DML, 'SELECT'):
                 schemaDict = selectParse(tokens, stmt)
+                if join is not None:
+                    for stmt in join:
+                        tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
+                        thisTable = schemaDict["table_name"]
+                        parsedJoin = joinParse(tokens, thisTable)
+                        schemaDict.update({"join": parsedJoin})
                 execution = ('select', schemaDict)
             if tokens[0].match(sqlparse.tokens.DML, 'UPDATE'):
                 schemaDict = updateParse(tokens)
@@ -336,6 +354,7 @@ def deleteParse(flag, tokens): #assumes flag is 1 if no WHERE clause exists
 def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     #print(tokens)
     schemaDict = {}
+    h_i = None
 
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
@@ -360,13 +379,21 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             for col in group_stmt:
                 group_by.append(col.strip())
             schemaDict.update({"group_by": group_by})
-        
         if token.match(sqlparse.tokens.Keyword, 'HAVING'):
-            clause = str(tokens[i+1])
-            parsedHaving = whereParse(clause)
-            schemaDict.update({"having":parsedHaving}) 
+            h_i = i
         
         if token.match(sqlparse.tokens.Keyword, 'ORDER BY'):
+            if h_i is not None:
+                #print("here")
+                clause = tokens[h_i:i]
+                clause_list = []
+                clause_str = ""
+                for c in clause:
+                    clause_list.append(c.value)
+                clause_str = " ".join(clause_list)
+                #print(clause_str)
+                parsedHaving = whereParse(clause_str)
+                schemaDict.update({"having":parsedHaving}) 
             order_stmt = tokens[i + 1].value.split(",")
             col_orders = []
             orders = []
@@ -379,16 +406,17 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
                 else:
                     orders.append("ASC")
             schemaDict.update({"order_by": {"col_orders": col_orders,"orders": orders }})
-        if token.match(sqlparse.tokens.Keyword, 'JOIN'):
-            clause = tokens[i+1:]
-            #print(clause)
-            for i in clause:
-               print(i)
-            thisTable = schemaDict["table_name"]
-            parsedJoin = joinParse(clause, thisTable)
-            schemaDict.update({"join": parsedJoin})
 
-
+    if h_i is not None and schemaDict.get("having") is None:
+            clause = tokens[h_i:]
+            clause_list = []
+            clause_str = ""
+            for c in clause:
+                clause_list.append(c.value)
+            clause_str = " ".join(clause_list)
+            #print(clause_str)
+            parsedHaving = whereParse(clause_str)
+            schemaDict.update({"having":parsedHaving}) 
     #print(schemaDict)
     return schemaDict
 print(readQuery(qs))

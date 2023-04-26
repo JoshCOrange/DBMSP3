@@ -16,7 +16,11 @@ SELECT * FROM Relation_1 where k = 1
 
 SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 and k = 100
 
-SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 and k = 100
+SELECT * FROM Relation_1 WHERE k BETWEEN 1 AND 10
+
+SELECT * FROM Relation WHERE val_2 LIKE 'S__'
+
+SELECT * FROM Relation WHERE val_2 LIKE 'S%'
 
 SELECT * FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 1 
 
@@ -31,4 +35,18 @@ SELECT sum(k) FROM Relation_1 WHERE k IN (1,2,3,4,10) and k < 10
 UPDATE Relation_1 SET k = 2, val = 10 WHERE k > 10 and k < 15
 
 DELETE FROM Relation_1 WHERE k > 10 and k < 100
+
+SELECT COUNT(k) FROM Relation_1 WHERE k < 5 HAVING COUNT(k) > 10
+
+SELECT COUNT(k) FROM Relation_1 WHERE k < 5 HAVING COUNT(k) > 1 
+
+SELECT k FROM Relation_1 JOIN Relation_2 ON k = k
+
+SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k = k"
+
+SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k > k"
+
+SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k != k"
+
+SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k <= k"
 

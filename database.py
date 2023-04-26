@@ -680,6 +680,8 @@ def search_table_having(Dict):
     txt = Dict['having']['condition'][0]   #condition value
     search_conditions = txt.split(' ')
     search_column_name = search_conditions[0]   #get column name we need to search (only one column)
+    #print(search_conditions)
+    df = Dict['df']
     if search_conditions[1] == "LIKE" or search_conditions[1] == "IN" or search_conditions[1] == ">" or search_conditions[1] == "<" or search_conditions[1] == "=" or search_conditions[1] == ">=" or search_conditions[1] == "<=" or search_conditions[1] == "!=":
         search_value = search_conditions[2]
     elif search_conditions[1] == "BETWEEN":
