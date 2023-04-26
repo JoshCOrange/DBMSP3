@@ -2,7 +2,7 @@ from database import *
 from parser import *
 from cannedTables import *
 import os 
-
+import traceback
 tableTreeRelation = {}
 
 test_CT = "CREATE TABLE Relation(k integer, val integer,val_2 string Primary Key (k))"
@@ -44,7 +44,7 @@ def main():
                 # Set the index of the DataFrame to the country name
                 with open("internal_table.csv", 'r', newline='') as f: 
                     df = df.set_index("table_name")
-                    new_df= df.drop(table_name)
+                    new_df = df.drop(table_name)
                     new_df = new_df.reset_index()
                     new_df.to_csv("internal_table.csv", index=False)
 
@@ -75,9 +75,15 @@ def main():
                 tableName = schemaDict.get('table_name')
                 treePtr = tableTreeRelation[tableName]
                 deleteKeyword(schemaDict)
-        except:
-            print("There is probably a syntax error in SQL")
+        except Exception as e:
+            print("There is probably a syntax error in SQL query")
+            print(e)
+            print(traceback.format_exc())
             continue
+
+def having (schemaDict, ans):
+    search_table_having(Dict)
+    pass
 
 
 def orderBy(schemaDict, ans):
@@ -90,7 +96,6 @@ def orderBy(schemaDict, ans):
         else:
             ans = ans.sort_values(by=[columns[i]])
     return ans
-
 
 
 def selectAggr(col_name, ans, aggr):
@@ -159,7 +164,7 @@ def selectKeyword(schemaDict):
         column_names = schemaDict['columns']
 
     whereDict = {"table_name": table_name,
-        'column_name': column_names, #TODO: Need to deal with aggrigation
+        'column_name': column_names, 
         'where': {'condition': ""}
         }
     all_rows = []
@@ -207,17 +212,122 @@ def selectKeyword(schemaDict):
 
 
 def updateKeyword(schemaDict):
-    #print("hello")
-    update_tree(TREE, schemaDict, KEY)
+    conditions =  schemaDict['where']['conditions']
+    conjunctions = schemaDict['where']['conjunctions']
+    table_name = schemaDict.get('table_name')
+    treePtr = tableTreeRelation[table_name]
+    column_names = "*"
 
-def deleteKeyword(schemaDict, treePtr):
+    whereDict = {"table_name": table_name,
+        'column_name': column_names,
+        'where': {'condition': ""}
+        }
+    all_rows = []
+    
+    for condition in conditions:
+        whereDict['where'].update({'condition': [condition]})
+        #print(whereDict['where']['condition'])
+        all_rows.append(search_table(whereDict, treePtr))
+    #print(all_rows)
+    for i, conjunction in enumerate(conjunctions):
+        if len(all_rows) == 1:
+            if conjunction.upper() == "AND":
+                all_rows.pop(0)
+            break
+        if conjunction.upper() == "OR":
+            if all_rows[0] is None:
+                all_rows.pop(0)
+                continue
+            if all_rows[1] is None:
+                all_rows.pop(1)
+                continue
+            new_rows = orConjunctions (all_rows[0],all_rows[1])
+        if conjunction.upper() == "AND":
+            if all_rows[0] is None or all_rows[1] is None:
+                all_rows.pop(0)
+                all_rows.pop(0)
+                continue
+            new_rows = andConjunctions (all_rows[0],all_rows[1])
+        all_rows.pop(0)
+        all_rows.pop(0)
+        all_rows.insert(0, new_rows)
+    #print(all_rows)
+    df = pd.read_csv("internal_table.csv")
+    # Set the index of the DataFrame to the country name
+    specific_row = df[df['table_name'] == schemaDict['table_name']]
+    schema = readDict(specific_row.loc[:,"schemaDict"].to_string(index=False))
+    primary_key_column_name = schema['primary_key']   #since we only have one primary key
+    orig_primary_keys = all_rows[0].loc[:,primary_key_column_name].to_list()
+    if type(orig_primary_keys[0]) is int:
+        index = schemaDict['columns'].index(primary_key_column_name[0])
+        schemaDict['values'][index] = int(schemaDict['values'][index])
+    for orig_key in orig_primary_keys:
+        update_table(treePtr, schemaDict, orig_key)
+    
+
+    
+
+    #update_tree(TREE, schemaDict, KEY)
+
+def deleteKeyword(schemaDict):
     where = False
     if schemaDict.get('where'):
         where = True
         parsedWhere = schemaDict.get('where')
-
     if where == False:
         drop_table(schemaDict, treePtr)
+    
+    conditions =  schemaDict['where']['conditions']
+    conjunctions = schemaDict['where']['conjunctions']
+    table_name = schemaDict.get('table_name')
+    treePtr = tableTreeRelation[table_name]
+    column_names = "*"
+
+    whereDict = {"table_name": table_name,
+        'column_name': column_names,
+        'where': {'condition': ""}
+        }
+    all_rows = []
+    
+    for condition in conditions:
+        whereDict['where'].update({'condition': [condition]})
+        #print(whereDict['where']['condition'])
+        all_rows.append(search_table(whereDict, treePtr))
+    #print(all_rows)
+    for i, conjunction in enumerate(conjunctions):
+        if len(all_rows) == 1:
+            if conjunction.upper() == "AND":
+                all_rows.pop(0)
+            break
+        if conjunction.upper() == "OR":
+            if all_rows[0] is None:
+                all_rows.pop(0)
+                continue
+            if all_rows[1] is None:
+                all_rows.pop(1)
+                continue
+            new_rows = orConjunctions (all_rows[0],all_rows[1])
+        if conjunction.upper() == "AND":
+            if all_rows[0] is None or all_rows[1] is None:
+                all_rows.pop(0)
+                all_rows.pop(0)
+                continue
+            new_rows = andConjunctions (all_rows[0],all_rows[1])
+        all_rows.pop(0)
+        all_rows.pop(0)
+        all_rows.insert(0, new_rows)
+    #print(all_rows)
+    df = pd.read_csv("internal_table.csv")
+    # Set the index of the DataFrame to the country name
+    specific_row = df[df['table_name'] == schemaDict['table_name']]
+    schema = readDict(specific_row.loc[:,"schemaDict"].to_string(index=False))
+    primary_key_column_name = schema['primary_key']   #since we only have one primary key
+    primary_keys = all_rows[0].loc[:,primary_key_column_name].to_list()
+    for key in primary_keys:
+        #print(key)
+        delete_index_tree(treePtr, key, table_name)
+    for key in treePtr.keys():
+        print(key)
     
 
 
@@ -225,6 +335,20 @@ def deleteKeyword(schemaDict, treePtr):
 #Catch on misspelling on database accessing
 #Join/Query optimization
 #AND and OR
+
+def thetaJoin(df_1, df_2, col_1, col_2, condition):
+    list1 = df_1.loc[:,[col_1]].to_list()
+    list2 = df_2.loc[:,[col_2]].to_list()
+    if len(list1) > len(list2):
+        outerList  =list1
+        innerList = list2
+    else:
+        outerList  =list2
+        innerList = list1
+    
+    for val in outerList:
+        pass
+
 
 
 def all_table ():

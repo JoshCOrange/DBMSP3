@@ -38,11 +38,11 @@ sqlS8 = '''SELECT COUNT(CustomerID), Country
             HAVING COUNT(CustomerID) BETWEEN 0 and 5;'''
 sql_d = "DELETE FROM r_1 WHERE k > 10 and k < 100"
 sql_u = "UPDATE r_1 SET k = 2, val = 10 WHERE k > 10; "
+sql_j = "SELECT k FROM relation_1  JOIN relation_2 ON k = relation_2_column"
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-#qs = [sql_u]
-#print(readQuery(qs))
+qs = [sql_j]
 
 
 
@@ -92,6 +92,27 @@ def readQuery(qs):
         return execution
         #print ("---"*20)
 
+
+def joinParse(tokens, tableName):
+    joinSchema = {"tableOne": "", "columnOne": "", "tableTwo": "", "columnTwo": "", "operator": "" }
+    tableOne = tableName
+    tableTwo = tokens[0].value
+
+    for i, token in enumerate(tokens):
+        #print(token)
+        if token.match(sqlparse.tokens.Keyword, 'ON'):
+            tmp = tokens[i+1].value.split(" ")
+            columnOne = tmp[0]
+            operator = tmp[1]
+            columnTwo = tmp[2]
+            break
+    joinSchema["tableOne"] = tableOne
+    joinSchema["tableTwo"] = tableTwo
+    joinSchema["columnOne"] = columnOne
+    joinSchema["columnTwo"] = columnTwo
+    joinSchema["operator"] = operator
+
+    return joinSchema
 
 
 def get_table_name(tokens): #Used for create table and create index
@@ -358,8 +379,16 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
                 else:
                     orders.append("ASC")
             schemaDict.update({"order_by": {"col_orders": col_orders,"orders": orders }})
+        if token.match(sqlparse.tokens.Keyword, 'JOIN'):
+            clause = tokens[i+1:]
+            #print(clause)
+            for i in clause:
+               print(i)
+            thisTable = schemaDict["table_name"]
+            parsedJoin = joinParse(clause, thisTable)
+            schemaDict.update({"join": parsedJoin})
 
 
     #print(schemaDict)
     return schemaDict
-
+print(readQuery(qs))
