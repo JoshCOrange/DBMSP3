@@ -4,10 +4,7 @@ import re
 import copy
 
 
-sqlCT = '''CREATE TABLE Relation_1(
-    k integer,
-    val integer,
-    Primary Key (k)
+sqlCT = '''CREATE TABLE DEF(Name string, ID integer, Apt# integer, FOREIGN KEY (k) REFERENCES ABC (Name) ON DELETE CASCADE, Primary Key (ID))
     )'''
 sqlCI = "CREATE INDEX ID_test ON t1 (col_1, col_2);"
 sqlDT = "DROP TABLE table_1"
@@ -48,13 +45,12 @@ sql_j4 = "SELECT k FROM Relation_1 WHERE k < 10 JOIN Relation_2 ON k <= k"
 
 #qs = [sqlCT,sqlCI,sqlDT, sqlDI] # Create and Drop table/index
 #qs = [sqlS1, sqlS2, sqlS3, sqlS4, sqlS5, sqlS6,sqlS7, sqlS8]
-qs = [sql_j4]
+qs = [sqlCT]
 
 
 
 def readQuery(qs):
-    #query = input("Please enter query")
-    #sql = "DROP TABLE test"
+
     schemaDict = {}
     execution = ()
     join = None
@@ -68,9 +64,7 @@ def readQuery(qs):
             parsed = sqlparse.parse(sql)
         for stmt in parsed:
             tokens = [t for t in sqlparse.sql.TokenList(stmt.tokens) if t.ttype != sqlparse.tokens.Whitespace]
-            # Is it a create statements ?
-            #print(type(tokens))
-            #temp = str(tokens[0])
+
             if tokens[0].match(sqlparse.tokens.DDL, 'CREATE'):
                 if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
                     schemaDict = createParse(1,tokens)
@@ -78,7 +72,7 @@ def readQuery(qs):
                 if tokens[1].match(sqlparse.tokens.Keyword, 'INDEX'):
                     schemaDict = createParse(-1, tokens)
                     execution = ('create index', schemaDict)
-            if tokens[0].match(sqlparse.tokens.DDL, 'DROP'): #Should we handle if exists?
+            if tokens[0].match(sqlparse.tokens.DDL, 'DROP'): 
                 if tokens[1].match(sqlparse.tokens.Keyword, 'TABLE'):
                     schemaDict = dropParse(1,tokens)
                     execution = ('drop table', schemaDict)
@@ -187,7 +181,7 @@ def whereParse(clause): #Due to "BETWEEN # AND #" the where clause parse have to
         return whereSchemaDict
         
 
-def createParse(flag, tokens): #Design Choice, stop user from using () in naming anything
+def createParse(flag, tokens):
     schemaDict = {
             'table_name': "", 
             'primary_key':[],
@@ -206,9 +200,8 @@ def createParse(flag, tokens): #Design Choice, stop user from using () in naming
             foreign_tables = []
             foreign_columns = []
             foreign_deletes = []
-            # Get the table name by looking at the tokens in reverse order till you find
-            # a token with None type
-            #print (f"table: {get_table_name(tokens[:i])}")
+            # Get the table name by looking at the tokens in reverse order till find a token with None type
+
             schemaDict.update({"table_name": get_table_name(tokens[:i])})
 
             # Now parse the columns
@@ -217,33 +210,24 @@ def createParse(flag, tokens): #Design Choice, stop user from using () in naming
             for column in columns:
                 c = ' '.join(column.split()).split()
                 c_name = c[0].replace('\"',"")
-                c_type = c[1]  # For condensed type information 
-                # OR 
-                #c_type = " ".join(c[1:]) # For detailed type information 
+                c_type = c[1]  
                 if c[0].casefold() == "Primary".casefold():
-                    #print(f"Primary key: {c[2][1:-1]}")
                     schemaDict.update({"primary_key": c[2][1:-1]})
                     continue
                 if c[0].casefold() == "Foreign".casefold():
-                    #print(f"Foreign key: {c[2][1:-1]}")
                     foreign_keys.append(c[2][1:-1])
-                    #print(f"    Referenced Table: {c[4][0:-1]}")
-                    foreign_tables.append(c[4][0:-1])
-                    #print(f"    Referenced Column: {c[5][1:-1]}")
+                    foreign_tables.append(c[4][0:])
                     foreign_columns.append(c[5][1:-1])
                     delete = " ".join(c[8:])
-                    #print(f"    Delete Type: {delete}")
                     foreign_deletes.append(delete)
                     schemaDict.update({"foreign_keys": foreign_keys})
                     schemaDict.update({"foreign_tables": foreign_tables})
                     schemaDict.update({"foreign_columns": foreign_columns})
                     schemaDict.update({"foreign_deletes": foreign_deletes})
                     continue
-                #print (f"column: {c_name}")
+
                 column_names.append(c_name)
-                #print (f"date type: {c_type}")
                 column_types.append(c_type)
-                #print(type(c[0]))
                 schemaDict.update({"column_names": column_names})
                 schemaDict.update({"column_types": column_types})
             break
@@ -253,29 +237,26 @@ def createParse(flag, tokens): #Design Choice, stop user from using () in naming
             column_names = []
             schemaDict.update({"index_name": tokens[i-1].value})
             tableColumns = tokens[i+1].value.split(" ")
-            #tableColumns = [''.join(c for c in s if c not in string.punctuation) for s in tableColumns if s]
-            #tableColumns = [s for s in tableColumns if s]
-            #print (f"table: {tableColumns[0]}")
+
             schemaDict.update({"table_name": tableColumns[0]})
             for col in tableColumns[1:]:
-                #print (f"column: {col}")
+
                 column_names.append(col)
             schemaDict.update({"column_names": column_names})
-    #print(schemaDict)
+
     return schemaDict
             
 def dropParse(flag, tokens):
     schemaDict = {}
     if flag == 1:
-        #print("Drop Table")
-        #print (f"table: {tokens[-1]}")
+
         schemaDict.update({"table_name": tokens[-1].value})
         return schemaDict
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.Keyword, 'ON'):
-            #print (f"index: {tokens[i-1]}")
+
             schemaDict.update({"index_name": tokens[i-1].value})
-            #print (f"table: {tokens[i+1]}")
+
             schemaDict.update({"table_name": tokens[i+1].value})
     return schemaDict
 
@@ -298,7 +279,7 @@ def updateParse(tokens): #assumes values are encolsed in single quotes
         values.append(tmp[1].strip())
         #print(tmp)
     schemaDict = {'table_name': tableName, 'columns': columns, 'values': values, 'where': whereClause}
-    return schemaDict #or whatever to send to execution
+    return schemaDict 
 
 def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VALUES (value1, value2, value3);
     tableName = None
@@ -313,12 +294,10 @@ def insertParse(tokens): #INSERT INTO table_name (column1, column2, column3) VAL
                 if tableName[i] == '(':
                     tableName = tableName[:i]
                     break
-            #print(tableName)
             columnsStartIndex = tokens.index(token) + 1
             valuesStartIndex = tokens.index(token) + 2
             break
-    #print(str(tokens[columnsStartIndex]))
-    #print(str(tokens[valuesStartIndex]))
+
     columns = str(tokens[columnsStartIndex]).split('(')[1:] # split on ( to find the columns
     columns  = columns[0].split(', ') # split on ', ' for each column name
     columns[-1] = columns[-1][:-1] # remove ')' on the last column name
@@ -359,13 +338,10 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
     for i, token in enumerate(tokens):
         if token.match(sqlparse.tokens.DML, 'SELECT'):
             columns = tokens[i + 1].value.split(" ")
-            #columns = [''.join(c for c in s if c not in "!\"#$%&'+, -/:;<=>?@[\]^_`{|}~") for s in columns if s]
-            #String.punctuation is not used because we want to preserve * in select statment
             schemaDict.update({"columns": columns})
         
-        if token.match(sqlparse.tokens.Keyword, 'FROM'): #if at end of select or next token is 'WHERE'
+        if token.match(sqlparse.tokens.Keyword, 'FROM'): 
             table_names = tokens[i+1].value.split(" ")
-            #tables_names = [''.join(c for c in s if c not in string.punctuation) for s in table_names if s]
             schemaDict.update({"table_name": table_names}) 
         
         if token.value.upper().startswith("WHERE"):
@@ -384,14 +360,12 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
         
         if token.match(sqlparse.tokens.Keyword, 'ORDER BY'):
             if h_i is not None:
-                #print("here")
                 clause = tokens[h_i:i]
                 clause_list = []
                 clause_str = ""
                 for c in clause:
                     clause_list.append(c.value)
                 clause_str = " ".join(clause_list)
-                #print(clause_str)
                 parsedHaving = whereParse(clause_str)
                 schemaDict.update({"having":parsedHaving}) 
             order_stmt = tokens[i + 1].value.split(",")
@@ -417,6 +391,5 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             #print(clause_str)
             parsedHaving = whereParse(clause_str)
             schemaDict.update({"having":parsedHaving}) 
-    #print(schemaDict)
     return schemaDict
-#print(readQuery(qs))
+print(readQuery(qs))
