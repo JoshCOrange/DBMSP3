@@ -392,4 +392,4 @@ def selectParse(tokens, stmt): #SUM, AVG, MIN, MAX, COUNT, DISTINCT
             parsedHaving = whereParse(clause_str)
             schemaDict.update({"having":parsedHaving}) 
     return schemaDict
-print(readQuery(qs))
+#print(readQuery(qs))
